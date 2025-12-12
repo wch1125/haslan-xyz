@@ -37,6 +37,16 @@
         </div>
         
         <section class="nav-section">
+            <h2>Topics</h2>
+            <ul>
+                <li><a href="creative-writing.html">Creative Writing</a></li>
+                <li><a href="quotes.html">Quotes</a></li>
+                <li><a href="definitions.html">Definitions</a></li>
+                <li><a href="demo.html">Demo</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
             <h2>Demo Navigation</h2>
             <ul>
                 <li><a href="#dropcaps">Dropcaps</a></li>
@@ -65,9 +75,45 @@
             </header>
             
             <div class="abstract">
-                <p><span class="abstract-label">Abstract:</span> Interactive demonstration of Gwern-inspired features including dropcaps, sidenotes, collapsible sections, link popups, and more.</p>
+                <p><span class="abstract-label">Abstract:</span> Interactive demonstration of Gwern-inspired style features including dropcaps, sidenotes, collapsible sections, link popups, and more.</p>
             </div>
 
+            <section>
+                <h2>Multi-functional text blocks</h2>
+                <p><span class="dropcap">H</span>ere's a paragraph that combines multiple features from the list below. It starts with a dropcap, includes a sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Sidenotes are perfect for citations or tangential information that would interrupt the flow.</span></span>, references an <a href="pages/art-process.html">internal link</a> with popup preview, mentions an <a href="https://example.com">external link</a> with an icon, and uses <span class="smallcaps">smallcaps</span> for an acronym.</p>
+
+                <details class="collapse">
+                    <summary>Additional details in every post allow for deeper analysis while maintaining a simple design</summary>
+                    <div class="collapse-content">
+                        <p>Even inside this collapsible section, all the features still work!</p>
+                        <p>You can have another sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Nested features work perfectly.</span></span>, link to <a href="pages/contact.html">another page</a>, and use <code>inline code</code>.</p>
+                        <blockquote>
+                            <p>Even blockquotes are styled beautifully.</p>
+                        </blockquote>
+                    </div>
+                </details>
+            </section>
+
+            <section>
+                <h2>Typography in Action</h2>
+                <h3>Heading Level 3</h3>
+                <h4>Heading Level 4</h4>
+                <p>Regular paragraph text with <strong>bold</strong>, <em>italic</em>, and <code>inline code</code>. Here's a <a href="#top">link</a> to test the hover state.</p>
+                <blockquote>
+                    <p>This is a blockquote. Perfect for pull quotes or citations.</p>
+                </blockquote>
+                <ul>
+                    <li>Unordered list item one</li>
+                    <li>Unordered list item two with <a href="pages/quotes.html">a link</a></li>
+                    <li>Unordered list item three</li>
+                </ul>
+                <ol>
+                    <li>Ordered list item one</li>
+                    <li>Ordered list item two</li>
+                    <li>Ordered list item three</li>
+                </ol>
+            </section>
+                                   
             <section id="dropcaps" class="demo-section">
                 <span class="feature-label">Feature: Dropcaps</span>
                 <h3>Enlarged First Letters</h3>
@@ -120,9 +166,9 @@
                 <h3>Preview Links on Hover</h3>
                 <p>Internal links show preview popups when you hover over them (desktop only). Try hovering over these links:</p>
                 <ul>
-                    <li><a href="pages/art-process.html">Art & Observation</a> - See notes on watercolor painting</li>
-                    <li><a href="pages/watercolors.html">Watercolor Works</a> - View the portfolio</li>
-                    <li><a href="pages/contact.html">Contact</a> - Get in touch</li>
+                    <li><a href="pages/quotes.html">Quotes</a> - Link to individual quotes</li>
+                    <li><a href="pages/creative-writing.html">Creative Writing</a> - View references to similar topics</li>
+                    <li><a href="pages/definitions.html">Defined Terms</a> - Hyptertext definitions provide layered meaning in-line</li>
                 </ul>
                 <p>The popup appears after a short delay and shows the page title and a brief excerpt. This lets you decide whether to follow the link without losing your place.</p>
             </section>
@@ -155,42 +201,6 @@
                     <li><kbd>Alt</kbd> + <kbd>H</kbd> = Go to homepage</li>
                 </ul>
                 <p>More shortcuts can be added in <code>script.js</code> as needed.</p>
-            </section>
-
-            <section>
-                <h2>All Together Now</h2>
-                <p><span class="dropcap">H</span>ere's a paragraph that combines multiple features. It starts with a dropcap, includes a sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Sidenotes are perfect for citations or tangential information that would interrupt the flow.</span></span>, references an <a href="pages/art-process.html">internal link</a> with popup preview, mentions an <a href="https://example.com">external link</a> with an icon, and uses <span class="smallcaps">smallcaps</span> for an acronym.</p>
-
-                <details class="collapse">
-                    <summary>See Even More Features</summary>
-                    <div class="collapse-content">
-                        <p>Inside this collapsible section, all the features still work!</p>
-                        <p>You can have another sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Nested features work perfectly.</span></span>, link to <a href="pages/contact.html">another page</a>, and use <code>inline code</code>.</p>
-                        <blockquote>
-                            <p>Even blockquotes are styled beautifully.</p>
-                        </blockquote>
-                    </div>
-                </details>
-            </section>
-
-            <section>
-                <h2>Typography in Action</h2>
-                <h3>Heading Level 3</h3>
-                <h4>Heading Level 4</h4>
-                <p>Regular paragraph text with <strong>bold</strong>, <em>italic</em>, and <code>inline code</code>. Here's a <a href="#top">link</a> to test the hover state.</p>
-                <blockquote>
-                    <p>This is a blockquote. Perfect for pull quotes or citations.</p>
-                </blockquote>
-                <ul>
-                    <li>Unordered list item one</li>
-                    <li>Unordered list item two with <a href="pages/art-process.html">a link</a></li>
-                    <li>Unordered list item three</li>
-                </ul>
-                <ol>
-                    <li>Ordered list item one</li>
-                    <li>Ordered list item two</li>
-                    <li>Ordered list item three</li>
-                </ol>
             </section>
 
             <section>
