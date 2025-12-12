@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotes • H. Aslan</title>
+    <meta name="description" content="A collection of quotes organized by theme and author">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--link-color);
+            color: var(--link-color);
+        }
+        
+        .filter-btn.active {
+            background: var(--link-color);
+            color: white;
+            border-color: var(--link-color);
+        }
+        
+        .quote-entry {
+            margin: 3rem 0;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .quote-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin: 0 0 1rem 0;
+            font-style: italic;
+        }
+        
+        .quote-attribution {
+            font-family: var(--font-sans);
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .quote-author {
+            font-weight: 600;
+        }
+        
+        .quote-source {
+            font-style: italic;
+        }
+        
+        .quote-metadata {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .quote-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .quote-tag {
+            background: var(--code-bg);
+            padding: 0.25rem 0.6rem;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .quote-date {
+            color: var(--text-tertiary);
+            font-family: var(--font-sans);
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidenav">
+        <div class="nav-header">
+            <h1><a href="../index.html">H. Aslan</a></h1>
+            <p class="tagline">Notes from the margins</p>
+        </div>
+        
+        <section class="nav-section">
+            <h2>Topics</h2>
+            <ul>
+                <li><a href="creative-writing.html">Creative Writing</a></li>
+                <li><a href="quotes.html">Quotes</a></li>
+                <li><a href="definitions.html">Definitions</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
+            <h2>Projects</h2>
+            <ul>
+                <li><a href="credit-agreement.html">The HTML Credit Agreement</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
+            <h2>Connect</h2>
+            <ul>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </section>
+        
+        <div class="theme-toggle">
+            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                <span class="sun">☀</span>
+                <span class="moon">☾</span>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <article>
+            <a href="../index.html" class="back-link">Back to Home</a>
+            
+            <header class="page-header">
+                <h1>Quotes</h1>
+                <div class="page-metadata">
+                    <time datetime="2025-12-08">8 December 2025</time>
+                </div>
+            </header>
+            
+            <div class="abstract">
+                <p><span class="abstract-label">Abstract:</span> A collection of quotes that have shaped thinking, organized chronologically with tags for filtering by author, work, and theme.</p>
+            </div>
+
+            <section id="filter-section">
+                <h2>Filter by Theme</h2>
+                <div class="filter-controls">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="creativity">Creativity</button>
+                    <button class="filter-btn" data-filter="identity">Identity</button>
+                    <button class="filter-btn" data-filter="observation">Observation</button>
+                    <button class="filter-btn" data-filter="authenticity">Authenticity</button>
+                    <button class="filter-btn" data-filter="art">Art</button>
+                    <button class="filter-btn" data-filter="writing">Writing</button>
+                </div>
+            </section>
+
+            <section id="quotes-list">
+                <h2>Quotes</h2>
+                <div class="quote-entry" data-tags="identity" data-date="2025-12-08">
+                    <blockquote class="quote-text">
+                        "You are who you pretend to be, so be careful who you pretend to be." Kurt Vonnegut
+                    </blockquote>
+                    <div class="quote-attribution">
+                        <span class="quote-author">Kurt Vonnegut</span>
+                        <span class="quote-source">Sirens of Titan</span>
+                    </div>
+                    <div class="quote-metadata">
+                        <div class="quote-tags">
+                            <span class="quote-tag">identity</span>
+                        </div>
+                        <time class="quote-date" datetime="2025-12-08">Added December 2025</time>
+                    </div>
+                </div>
+
+
+                <!-- Example quotes - replace with your own -->
+                
+                <div class="quote-entry" data-tags="creativity,art,observation" data-date="2025-12-08">
+                    <blockquote class="quote-text">
+                        You can't paint what you don't see, and you can't see what you're not paying attention to.
+                    </blockquote>
+                    <div class="quote-attribution">
+                        <span class="quote-author">James Gurney</span>
+                        <span class="quote-source">Color and Light (2010)</span>
+                    </div>
+                    <div class="quote-metadata">
+                        <div class="quote-tags">
+                            <span class="quote-tag">creativity</span>
+                            <span class="quote-tag">art</span>
+                            <span class="quote-tag">observation</span>
+                        </div>
+                        <time class="quote-date" datetime="2025-12-08">Added December 2025</time>
+                    </div>
+                </div>
+
+                <div class="quote-entry" data-tags="identity,authenticity,conformity" data-date="2025-12-08">
+                    <blockquote class="quote-text">
+                        The person who follows the crowd will usually go no further than the crowd. The person who walks alone is likely to find himself in places no one has ever seen before.
+                    </blockquote>
+                    <div class="quote-attribution">
+                        <span class="quote-author">Albert Einstein</span>
+                        <span class="quote-source">Various attributions</span>
+                    </div>
+                    <div class="quote-metadata">
+                        <div class="quote-tags">
+                            <span class="quote-tag">identity</span>
+                            <span class="quote-tag">authenticity</span>
+                            <span class="quote-tag">conformity</span>
+                        </div>
+                        <time class="quote-date" datetime="2025-12-08">Added December 2025</time>
+                    </div>
+                </div>
+
+                <div class="quote-entry" data-tags="writing,creativity" data-date="2025-12-08">
+                    <blockquote class="quote-text">
+                        I write to find out what I think.
+                    </blockquote>
+                    <div class="quote-attribution">
+                        <span class="quote-author">Joan Didion</span>
+                        <span class="quote-source">Why I Write (1976)</span>
+                    </div>
+                    <div class="quote-metadata">
+                        <div class="quote-tags">
+                            <span class="quote-tag">writing</span>
+                            <span class="quote-tag">creativity</span>
+                        </div>
+                        <time class="quote-date" datetime="2025-12-08">Added December 2025</time>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="usage-guide">
+                <h2>Adding Quotes</h2>
+                <p>Use the provided <a href="../scripts/add-quote.py">add-quote.py</a> script to automatically add new quotes with proper formatting and tags. See the <a href="../README.md">README</a> for details.</p>
+            </section>
+
+            <section>
+                <p class="smallcaps">Quotes last updated: 8 December 2025</p>
+            </section>
+        </article>
+    </main>
+
+    <script src="../assets/js/script.js"></script>
+</body>
+</html>

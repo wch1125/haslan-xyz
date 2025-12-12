@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Demo • H. Aslan</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .demo-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+        }
+        .demo-section h3 {
+            margin-top: 0;
+            color: var(--link-color);
+        }
+        .feature-label {
+            display: inline-block;
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidenav">
+        <div class="nav-header">
+            <h1><a href="../index.html">H. Aslan</a></h1>
+            <p class="tagline">Notes from the margins</p>
+        </div>
+        
+        <section class="nav-section">
+            <h2>Demo Navigation</h2>
+            <ul>
+                <li><a href="#dropcaps">Dropcaps</a></li>
+                <li><a href="#sidenotes">Sidenotes</a></li>
+                <li><a href="#collapse">Collapsible</a></li>
+                <li><a href="#popups">Link Popups</a></li>
+                <li><a href="quotes.html">Quotes Page</a></li>
+            </ul>
+        </section>
+        
+        <div class="theme-toggle">
+            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                <span class="sun">☀</span>
+                <span class="moon">☾</span>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <article>
+            <header class="page-header">
+                <h1>Feature Demonstration</h1>
+                <div class="page-metadata">
+                    <time datetime="2025-12-08">8 December 2025</time>
+                </div>
+            </header>
+            
+            <div class="abstract">
+                <p><span class="abstract-label">Abstract:</span> Interactive demonstration of Gwern-inspired features including dropcaps, sidenotes, collapsible sections, link popups, and more.</p>
+            </div>
+
+            <section id="dropcaps" class="demo-section">
+                <span class="feature-label">Feature: Dropcaps</span>
+                <h3>Enlarged First Letters</h3>
+                <p><span class="dropcap">T</span>his paragraph demonstrates the dropcap feature. The first letter is enlarged and styled to create a classic editorial look. This is commonly seen in magazines and books to mark the beginning of a new section or chapter.</p>
+                <p>Notice how the text flows around the large letter. This is pure CSS, no images required.</p>
+            </section>
+
+            <section id="sidenotes" class="demo-section">
+                <span class="feature-label">Feature: Sidenotes</span>
+                <h3>Marginal Notes (Desktop Only)</h3>
+                <p>Sidenotes appear in the margin when you hover over them<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Like this! Sidenotes let you add additional context without interrupting the main text flow. They're perfect for citations, tangential thoughts, or clarifications.</span></span>. They're inspired by Edward Tufte's design principles.</p>
+                <p>On mobile devices, sidenotes convert to inline notes automatically. Try another sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">The numbering is automatic. You can have as many as you want per page.</span></span> to see the numbering system.</p>
+            </section>
+
+            <section id="collapse" class="demo-section">
+                <span class="feature-label">Feature: Collapsible Sections</span>
+                <h3>Hide/Show Content</h3>
+                <p>Collapsible sections let you hide detailed information that not everyone needs:</p>
+                
+                <details class="collapse">
+                    <summary>Technical Implementation Details</summary>
+                    <div class="collapse-content">
+                        <p>The collapsible sections use the HTML5 <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code> elements, styled with CSS. JavaScript adds state persistence via localStorage.</p>
+                        <p>Benefits:</p>
+                        <ul>
+                            <li>Works without JavaScript (graceful degradation)</li>
+                            <li>Remembers open/closed state between page loads</li>
+                            <li>Accessible by default</li>
+                            <li>Easy to style with CSS</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details class="collapse">
+                    <summary>Why Use Collapsible Sections?</summary>
+                    <div class="collapse-content">
+                        <p>Collapsible sections serve several purposes:</p>
+                        <ol>
+                            <li><strong>Progressive disclosure:</strong> Show overview first, details on demand</li>
+                            <li><strong>Reduced cognitive load:</strong> Don't overwhelm readers with everything at once</li>
+                            <li><strong>Better scanning:</strong> Readers can quickly see section topics</li>
+                            <li><strong>Mobile friendly:</strong> Reduces scrolling on small screens</li>
+                        </ol>
+                    </div>
+                </details>
+            </section>
+
+            <section id="popups" class="demo-section">
+                <span class="feature-label">Feature: Link Popups</span>
+                <h3>Preview Links on Hover</h3>
+                <p>Internal links show preview popups when you hover over them (desktop only). Try hovering over these links:</p>
+                <ul>
+                    <li><a href="pages/art-process.html">Art & Observation</a> - See notes on watercolor painting</li>
+                    <li><a href="pages/watercolors.html">Watercolor Works</a> - View the portfolio</li>
+                    <li><a href="pages/contact.html">Contact</a> - Get in touch</li>
+                </ul>
+                <p>The popup appears after a short delay and shows the page title and a brief excerpt. This lets you decide whether to follow the link without losing your place.</p>
+            </section>
+
+            <section class="demo-section">
+                <span class="feature-label">Feature: External Link Icons</span>
+                <h3>Visual Indicators</h3>
+                <p>External links automatically get a small arrow icon: <a href="https://gwern.net">Visit Gwern.net</a> or <a href="https://github.com">GitHub</a>. This helps distinguish internal navigation from external resources.</p>
+            </section>
+
+            <section class="demo-section">
+                <span class="feature-label">Feature: Smallcaps</span>
+                <h3>Typographic Refinement</h3>
+                <p>Use smallcaps for acronyms and stylistic emphasis: <span class="smallcaps">NYC</span>, <span class="smallcaps">USA</span>, or <span class="smallcaps">SIGINT</span>. Also works for closing statements.</p>
+                <p class="smallcaps">This entire paragraph is in smallcaps for emphasis.</p>
+            </section>
+
+            <section class="demo-section">
+                <span class="feature-label">Feature: Dark Mode</span>
+                <h3>Theme Toggle</h3>
+                <p>Click the button in the sidebar or press <kbd>Alt+D</kbd> to toggle between light and dark modes. Your preference is saved in localStorage and persists between visits.</p>
+                <p>The dark mode uses CSS variables to smoothly transition all colors. No flash of unstyled content.</p>
+            </section>
+
+            <section class="demo-section">
+                <span class="feature-label">Feature: Keyboard Shortcuts</span>
+                <h3>Power User Features</h3>
+                <ul>
+                    <li><kbd>Alt</kbd> + <kbd>D</kbd> = Toggle dark mode</li>
+                    <li><kbd>Alt</kbd> + <kbd>H</kbd> = Go to homepage</li>
+                </ul>
+                <p>More shortcuts can be added in <code>script.js</code> as needed.</p>
+            </section>
+
+            <section>
+                <h2>All Together Now</h2>
+                <p><span class="dropcap">H</span>ere's a paragraph that combines multiple features. It starts with a dropcap, includes a sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Sidenotes are perfect for citations or tangential information that would interrupt the flow.</span></span>, references an <a href="pages/art-process.html">internal link</a> with popup preview, mentions an <a href="https://example.com">external link</a> with an icon, and uses <span class="smallcaps">smallcaps</span> for an acronym.</p>
+
+                <details class="collapse">
+                    <summary>See Even More Features</summary>
+                    <div class="collapse-content">
+                        <p>Inside this collapsible section, all the features still work!</p>
+                        <p>You can have another sidenote<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Nested features work perfectly.</span></span>, link to <a href="pages/contact.html">another page</a>, and use <code>inline code</code>.</p>
+                        <blockquote>
+                            <p>Even blockquotes are styled beautifully.</p>
+                        </blockquote>
+                    </div>
+                </details>
+            </section>
+
+            <section>
+                <h2>Typography in Action</h2>
+                <h3>Heading Level 3</h3>
+                <h4>Heading Level 4</h4>
+                <p>Regular paragraph text with <strong>bold</strong>, <em>italic</em>, and <code>inline code</code>. Here's a <a href="#top">link</a> to test the hover state.</p>
+                <blockquote>
+                    <p>This is a blockquote. Perfect for pull quotes or citations.</p>
+                </blockquote>
+                <ul>
+                    <li>Unordered list item one</li>
+                    <li>Unordered list item two with <a href="pages/art-process.html">a link</a></li>
+                    <li>Unordered list item three</li>
+                </ul>
+                <ol>
+                    <li>Ordered list item one</li>
+                    <li>Ordered list item two</li>
+                    <li>Ordered list item three</li>
+                </ol>
+            </section>
+
+            <section>
+                <p class="smallcaps">End of demonstration</p>
+            </section>
+        </article>
+    </main>
+
+    <script src="../assets/js/script.js"></script>
+</body>
+</html>

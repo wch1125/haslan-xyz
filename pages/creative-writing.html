@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Writing • H. Aslan</title>
+    <meta name="description" content="Short stories, poems, essays, and fragments">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .writing-grid {
+            display: grid;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .writing-card {
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .writing-card:hover {
+            border-color: var(--text-secondary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        [data-theme="dark"] .writing-card:hover {
+            box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+        }
+        
+        .writing-card h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .writing-card h3 a {
+            color: var(--text-primary);
+            border: none;
+        }
+        
+        .writing-card h3 a:hover {
+            color: var(--link-color);
+        }
+        
+        .writing-metadata {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .writing-category {
+            background: var(--code-bg);
+            padding: 0.25rem 0.6rem;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        .writing-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidenav">
+        <div class="nav-header">
+            <h1><a href="../index.html">H. Aslan</a></h1>
+            <p class="tagline">Notes from the margins</p>
+        </div>
+        
+        <section class="nav-section">
+            <h2>Topics</h2>
+            <ul>
+                <li><a href="creative-writing.html">Creative Writing</a></li>
+                <li><a href="quotes.html">Quotes</a></li>
+                <li><a href="definitions.html">Definitions</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
+            <h2>Projects</h2>
+            <ul>
+                <li><a href="credit-agreement.html">The HTML Credit Agreement</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
+            <h2>Connect</h2>
+            <ul>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </section>
+        
+        <div class="theme-toggle">
+            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                <span class="sun">☀</span>
+                <span class="moon">☾</span>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <article>
+            <a href="../index.html" class="back-link">Back to Home</a>
+            
+            <header class="page-header">
+                <h1>Creative Writing</h1>
+                <div class="page-metadata">
+                    <time datetime="2025-12-08">8 December 2025</time>
+                </div>
+            </header>
+            
+            <div class="abstract">
+                <p><span class="abstract-label">Abstract:</span> A collection of thoughts and musings, some serious, most not. Fiction as a way of thinking through problems that analysis can't quite reach.</p>
+            </div>
+
+            <section id="introduction">
+                <p><span class="dropcap">F</span>iction allows exploration of ideas that resist direct analysis. These pieces range from complete stories to fragments and experiments—whatever form serves the thought.</p>
+            </section>
+
+            <section id="writings">
+                <h2>Pieces</h2>
+                
+                <div class="writing-grid">
+                    <div class="writing-card" data-category="poem">
+                        <h3><a href="writing/test-poem.html">Test Poem</a></h3>
+                        <div class="writing-metadata">
+                            <span class="writing-category">Poem</span>
+                            <time datetime="2025-12-08">08 December 2025</time>
+                        </div>
+                        <p class="writing-excerpt">Test Test Test</p>
+                    </div>
+
+                    <!-- New writing pieces will be added here by add-writing.py script -->
+                    
+                    <!-- Example entry structure:
+                    <div class="writing-card" data-category="short story">
+                        <h3><a href="writing/example-piece.html">Title of Piece</a></h3>
+                        <div class="writing-metadata">
+                            <span class="writing-category">Short Story</span>
+                            <time datetime="2025-12-08">8 December 2025</time>
+                        </div>
+                        <p class="writing-excerpt">Brief excerpt or description of the piece...</p>
+                    </div>
+                    -->
+                    
+                </div>
+            </section>
+
+            <section id="usage-guide">
+                <h2>Adding Writing</h2>
+                <p>Use the provided <a href="../scripts/add-writing.py">add-writing.py</a> script to automatically create new writing pages and add them to this index. See the <a href="../README.md">README</a> for details.</p>
+            </section>
+
+            <section>
+                <p class="smallcaps">Last updated: 8 December 2025</p>
+            </section>
+        </article>
+    </main>
+
+    <script src="../assets/js/script.js"></script>
+</body>
+</html>
