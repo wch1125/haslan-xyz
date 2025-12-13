@@ -4,6 +4,210 @@
 // ============================================
 
 // ============================================
+// Auto-Enhancement System
+// Automatically applies typography and linking
+// ============================================
+const AutoEnhance = {
+    definitions: {},
+    
+    async init() {
+        await this.loadDefinitions();
+        this.applyDropcaps();
+        this.linkDefinitions();
+        this.enhanceWritingContent();
+        
+        // Re-attach popup listeners for newly created definition links
+        if (typeof LinkPopup !== 'undefined' && LinkPopup.attachDefinitionListeners) {
+            LinkPopup.attachDefinitionListeners();
+        }
+    },
+    
+    // Load definitions from the definitions page
+    async loadDefinitions() {
+        try {
+            // Determine the path to definitions.html based on current location
+            const currentPath = window.location.pathname;
+            let definitionsPath;
+            
+            if (currentPath.includes('/pages/writing/')) {
+                definitionsPath = '../definitions.html';
+            } else if (currentPath.includes('/pages/')) {
+                definitionsPath = 'definitions.html';
+            } else {
+                definitionsPath = 'pages/definitions.html';
+            }
+            
+            const response = await fetch(definitionsPath);
+            if (!response.ok) return;
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Extract definitions
+            doc.querySelectorAll('.definition-entry').forEach(entry => {
+                const termEl = entry.querySelector('.definition-term');
+                const contentEl = entry.querySelector('.definition-content p');
+                const id = entry.getAttribute('id');
+                
+                if (termEl && contentEl && id) {
+                    const term = termEl.textContent.trim();
+                    // Get first ~150 chars of definition for preview
+                    let preview = contentEl.textContent.trim();
+                    if (preview.length > 150) {
+                        preview = preview.substring(0, 147) + '...';
+                    }
+                    
+                    this.definitions[term.toLowerCase()] = {
+                        term: term,
+                        slug: id,
+                        preview: preview
+                    };
+                }
+            });
+        } catch (e) {
+            // Silently fail - definitions just won't auto-link
+            console.log('Could not load definitions for auto-linking');
+        }
+    },
+    
+    // Auto-apply dropcaps to first paragraph of content sections
+    applyDropcaps() {
+        // Target first paragraph in main content areas
+        const selectors = [
+            'section#introduction > p:first-of-type',
+            '.writing-content > p:first-of-type',
+            'article > section:first-of-type > p:first-of-type'
+        ];
+        
+        selectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(p => {
+                // Skip if already has a dropcap
+                if (p.querySelector('.dropcap')) return;
+                // Skip if paragraph is too short
+                if (p.textContent.trim().length < 50) return;
+                
+                const text = p.innerHTML;
+                // Find the first actual letter (skip any HTML tags at start)
+                const match = text.match(/^(\s*(?:<[^>]+>)*)([A-Za-z])/);
+                if (match) {
+                    const before = match[1] || '';
+                    const letter = match[2];
+                    const after = text.substring(match[0].length);
+                    p.innerHTML = `${before}<span class="dropcap">${letter}</span>${after}`;
+                }
+            });
+        });
+    },
+    
+    // Auto-link defined terms in content
+    linkDefinitions() {
+        if (Object.keys(this.definitions).length === 0) return;
+        
+        // Don't process the definitions page itself
+        if (window.location.pathname.includes('definitions.html')) return;
+        
+        // Get the correct path prefix for links
+        const currentPath = window.location.pathname;
+        let linkPrefix;
+        if (currentPath.includes('/pages/writing/')) {
+            linkPrefix = '../definitions.html';
+        } else if (currentPath.includes('/pages/')) {
+            linkPrefix = 'definitions.html';
+        } else {
+            linkPrefix = 'pages/definitions.html';
+        }
+        
+        // Content areas to process
+        const contentAreas = document.querySelectorAll(
+            'article p, article li, .writing-content, .abstract p, blockquote'
+        );
+        
+        contentAreas.forEach(el => {
+            // Skip if inside a link or heading
+            if (el.closest('a') || el.closest('h1, h2, h3, h4')) return;
+            
+            this.processTextNode(el, linkPrefix);
+        });
+    },
+    
+    processTextNode(element, linkPrefix) {
+        // Get all text nodes in this element
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+            // Skip if parent is already a link or definition-link
+            if (node.parentElement.closest('a, .definition-link')) continue;
+            textNodes.push(node);
+        }
+        
+        // Process each text node
+        textNodes.forEach(textNode => {
+            let html = textNode.textContent;
+            let modified = false;
+            
+            // Check each definition term
+            for (const [termLower, def] of Object.entries(this.definitions)) {
+                // Match whole words only, case-insensitive but preserve original case
+                // Match the term with a capital first letter (as Defined Terms should appear)
+                const capitalizedTerm = def.term;
+                const regex = new RegExp(`\\b(${this.escapeRegex(capitalizedTerm)})\\b`, 'g');
+                
+                if (regex.test(html)) {
+                    modified = true;
+                    html = html.replace(regex, 
+                        `<a href="${linkPrefix}#${def.slug}" class="definition-link" data-term="${def.term}" data-definition="${this.escapeHtml(def.preview)}">$1</a>`
+                    );
+                }
+            }
+            
+            if (modified) {
+                const span = document.createElement('span');
+                span.innerHTML = html;
+                textNode.parentNode.replaceChild(span, textNode);
+            }
+        });
+    },
+    
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    },
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/"/g, '&quot;');
+    },
+    
+    // Enhance writing content with additional formatting
+    enhanceWritingContent() {
+        // Auto-format poetry/verse (lines ending without periods)
+        document.querySelectorAll('.writing-content').forEach(content => {
+            // Add verse class if content looks like poetry
+            const text = content.textContent;
+            const lines = text.split('\n').filter(l => l.trim());
+            const shortLines = lines.filter(l => l.trim().length < 60 && !l.trim().endsWith('.')); 
+            
+            if (shortLines.length > lines.length * 0.5) {
+                content.classList.add('verse');
+            }
+        });
+    }
+};
+
+// Initialize auto-enhancement after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    AutoEnhance.init();
+});
+
+// ============================================
 // Dark Mode Toggle
 // ============================================
 const themeToggle = document.getElementById('theme-toggle-btn');
@@ -84,13 +288,23 @@ const LinkPopup = {
         document.body.appendChild(this.popup);
         
         // Attach event listeners to all internal page links
-        document.querySelectorAll('a[href^="pages/"]').forEach(link => {
+        document.querySelectorAll('a[href^="pages/"], a[href$=".html"]:not([href^="http"])').forEach(link => {
+            // Skip definition links - they have their own handler
+            if (link.classList.contains('definition-link')) return;
             link.addEventListener('mouseenter', (e) => this.showPagePreview(e));
             link.addEventListener('mouseleave', () => this.hide());
         });
 
-        // Attach event listeners to definition links
+        // Initial attachment for definition links
+        this.attachDefinitionListeners();
+    },
+    
+    // Separate method so it can be called after auto-enhancement
+    attachDefinitionListeners() {
         document.querySelectorAll('a.definition-link').forEach(link => {
+            // Avoid duplicate listeners
+            if (link.dataset.popupAttached) return;
+            link.dataset.popupAttached = 'true';
             link.addEventListener('mouseenter', (e) => this.showDefinition(e));
             link.addEventListener('mouseleave', () => this.hide());
         });
@@ -346,13 +560,52 @@ if ('IntersectionObserver' in window) {
 }
 
 // ============================================
-// Quote Filter System
+// Quote Filter System (Dynamic)
 // ============================================
 const QuoteFilter = {
     init() {
-        const filterButtons = document.querySelectorAll('.filter-btn');
+        const container = document.getElementById('filter-buttons');
         const quotes = document.querySelectorAll('.quote-entry');
         
+        if (!container || quotes.length === 0) return;
+        
+        // Collect all unique tags from quotes
+        const allTags = new Set();
+        quotes.forEach(quote => {
+            const tags = quote.getAttribute('data-tags');
+            if (tags) {
+                tags.split(',').forEach(tag => {
+                    const trimmed = tag.trim().toLowerCase();
+                    if (trimmed) allTags.add(trimmed);
+                });
+            }
+        });
+        
+        // Sort tags alphabetically
+        const sortedTags = Array.from(allTags).sort();
+        
+        // Build filter buttons
+        container.innerHTML = '';
+        
+        // "All" button first
+        const allBtn = document.createElement('button');
+        allBtn.className = 'filter-btn active';
+        allBtn.setAttribute('data-filter', 'all');
+        allBtn.textContent = 'All';
+        container.appendChild(allBtn);
+        
+        // Tag buttons
+        sortedTags.forEach(tag => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn';
+            btn.setAttribute('data-filter', tag);
+            // Capitalize first letter for display
+            btn.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+            container.appendChild(btn);
+        });
+        
+        // Attach click handlers
+        const filterButtons = container.querySelectorAll('.filter-btn');
         filterButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const filter = button.getAttribute('data-filter');
@@ -363,7 +616,7 @@ const QuoteFilter = {
                 
                 // Filter quotes
                 quotes.forEach(quote => {
-                    const tags = quote.getAttribute('data-tags').split(',');
+                    const tags = quote.getAttribute('data-tags').toLowerCase().split(',').map(t => t.trim());
                     if (filter === 'all' || tags.includes(filter)) {
                         quote.style.display = 'block';
                     } else {
@@ -374,6 +627,59 @@ const QuoteFilter = {
         });
     }
 };
+
+// ============================================
+// Definition Alphabetical Index (Dynamic)
+// ============================================
+const DefinitionIndex = {
+    init() {
+        const container = document.getElementById('alpha-index');
+        const definitions = document.querySelectorAll('.definition-entry');
+        
+        if (!container || definitions.length === 0) return;
+        
+        // Collect unique first letters from definition terms
+        const letters = new Set();
+        definitions.forEach(def => {
+            const letterSpan = def.querySelector('.definition-letter');
+            if (letterSpan) {
+                letters.add(letterSpan.textContent.trim().toUpperCase());
+            }
+        });
+        
+        // Sort alphabetically
+        const sortedLetters = Array.from(letters).sort();
+        
+        // Build index links
+        container.innerHTML = '';
+        sortedLetters.forEach(letter => {
+            const link = document.createElement('a');
+            link.href = '#' + letter;
+            link.textContent = letter;
+            container.appendChild(link);
+            
+            // Add letter anchor to first definition starting with that letter
+            definitions.forEach(def => {
+                const letterSpan = def.querySelector('.definition-letter');
+                if (letterSpan && letterSpan.textContent.trim().toUpperCase() === letter) {
+                    // Check if anchor doesn't already exist
+                    if (!document.getElementById(letter)) {
+                        def.setAttribute('id', def.getAttribute('id')); // Keep existing ID
+                        // Add a named anchor before this definition
+                        const anchor = document.createElement('a');
+                        anchor.setAttribute('name', letter);
+                        anchor.id = letter;
+                        def.parentNode.insertBefore(anchor, def);
+                    }
+                }
+            });
+        });
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    DefinitionIndex.init();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     QuoteFilter.init();

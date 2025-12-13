@@ -109,7 +109,13 @@
                 <li><a href="creative-writing.html">Creative Writing</a></li>
                 <li><a href="quotes.html">Quotes</a></li>
                 <li><a href="definitions.html">Definitions</a></li>
-                <li><a href="demo.html">Demo</a></li>
+            </ul>
+        </section>
+
+        <section class="nav-section">
+            <h2>Projects</h2>
+            <ul>
+                <li><a href="credit-agreement.html">The HTML Credit Agreement</a></li>
             </ul>
         </section>
 
@@ -145,41 +151,16 @@
 
             <section id="filter-section">
                 <h2>Filter by Theme</h2>
-                <div class="filter-controls">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="creativity">Creativity</button>
-                    <button class="filter-btn" data-filter="identity">Identity</button>
-                    <button class="filter-btn" data-filter="observation">Observation</button>
-                    <button class="filter-btn" data-filter="authenticity">Authenticity</button>
-                    <button class="filter-btn" data-filter="art">Art</button>
-                    <button class="filter-btn" data-filter="writing">Writing</button>
+                <div class="filter-controls" id="filter-buttons">
+                    <!-- Filter buttons are generated automatically from quote tags -->
+                    <noscript>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Enable JavaScript to use tag filtering.</p>
+                    </noscript>
                 </div>
             </section>
 
             <section id="quotes-list">
                 <h2>Quotes</h2>
-                <div class="quote-entry" data-tags="good,evil,angel,mafia,titan,humor,1950s" data-date="2025-12-12">
-                    <blockquote class="quote-text">
-                        "There is no reason why good cannot triumph as often as evil. The triumph of anything is a matter of organization. If there are such things as angels, I hope that they are organized along the lines of the Mafia."
-                    </blockquote>
-                    <div class="quote-attribution">
-                        <span class="quote-author">Kurt Vonnegut</span>
-                        <span class="quote-source">The Sirens of Titan (1959)</span>
-                    </div>
-                    <div class="quote-metadata">
-                        <div class="quote-tags">
-                            <span class="quote-tag">good</span>
-                            <span class="quote-tag">evil</span>
-                            <span class="quote-tag">angel</span>
-                            <span class="quote-tag">mafia</span>
-                            <span class="quote-tag">titan</span>
-                            <span class="quote-tag">humor</span>
-                            <span class="quote-tag">1950s</span>
-                        </div>
-                        <time class="quote-date" datetime="2025-12-12">Added December 2025</time>
-                    </div>
-                </div>
-
                 <div class="quote-entry" data-tags="identity" data-date="2025-12-08">
                     <blockquote class="quote-text">
                         "You are who you pretend to be, so be careful who you pretend to be." Kurt Vonnegut
@@ -252,6 +233,11 @@
                     </div>
                 </div>
 
+            </section>
+
+            <section id="usage-guide">
+                <h2>Adding Quotes</h2>
+                <p>Use the provided <a href="../scripts/add-quote.py">add-quote.py</a> script to automatically add new quotes with proper formatting and tags. See the <a href="../README.md">README</a> for details.</p>
             </section>
 
             <section>

@@ -500,12 +500,36 @@ a[href^="http"][href*="haslan"]::after {
    ============================================ */
 
 a.definition-link {
-    border-bottom: 1px dotted var(--link-color);
+    border-bottom: 1px dotted var(--accent-gold);
+    color: inherit;
     cursor: help;
+    text-decoration: none;
 }
 
 a.definition-link:hover {
     border-bottom-style: solid;
+    color: var(--accent-gold);
+}
+
+a.definition-link:visited {
+    color: inherit;
+}
+
+/* ============================================
+   VERSE / POETRY FORMATTING
+   ============================================ */
+
+.verse {
+    white-space: pre-line;
+    font-style: italic;
+    line-height: 1.8;
+    padding-left: 2rem;
+    border-left: 2px solid var(--accent-gold);
+    margin: 2rem 0;
+}
+
+.writing-content.verse {
+    padding-left: 2rem;
 }
 
 /* ============================================
