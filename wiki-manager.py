@@ -40,6 +40,29 @@ def slugify(text):
     slug = re.sub(r'[-\s]+', '-', slug)
     return slug.strip('-')
 
+def parse_related_token(raw):
+    """
+    Parse related term tokens that may include annotations.
+    Supports:
+      - "Term"
+      - "Term|note" (e.g., "Conformity|opposite")
+    Returns (term, note) tuple with whitespace trimmed.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return None, None
+
+    if "|" in raw:
+        term, note = [p.strip() for p in raw.split("|", 1)]
+    else:
+        term, note = raw, ""
+
+    term = term.strip()
+    if not term:
+        return None, None
+
+    return term, note
+
 def get_current_date():
     """Get current date in various formats"""
     now = datetime.now()
@@ -138,8 +161,13 @@ def add_definition(term, definition_paragraphs, related_terms):
     if related_terms:
         related_list = [t.strip() for t in related_terms.split(',') if t.strip()]
         if related_list:
+            parsed = [parse_related_token(t) for t in related_list]
             related_items = '\n                                    '.join(
-                f'<li><a href="#{slugify(t)}">{t}</a></li>' for t in related_list
+                f'<li><a href="#{slugify(term)}">{term}</a>'
+                f'{f" <span class=\"related-note\">({note})</span>" if note else ""}'
+                f'</li>'
+                for term, note in parsed
+                if term
             )
             related_html = f'''
                         <details class="collapse">
@@ -208,13 +236,8 @@ def add_writing(title, category, excerpt, content_text):
                 <li><a href="../creative-writing.html">Creative Writing</a></li>
                 <li><a href="../quotes.html">Quotes</a></li>
                 <li><a href="../definitions.html">Definitions</a></li>
-            </ul>
-        </section>
-
-        <section class="nav-section">
-            <h2>Projects</h2>
-            <ul>
-                <li><a href="../credit-agreement.html">The HTML Credit Agreement</a></li>
+                <li><a href="../personal-domain.html">Personal Domain</a></li>
+                <li><a href="../demo.html">Demo</a></li>
             </ul>
         </section>
 
@@ -289,6 +312,121 @@ def add_writing(title, category, excerpt, content_text):
         return True, filename
     return False, None
 
+def add_page(title, filename_or_slug, description, abstract, content_html, add_to_home=False):
+    """Create a non-writing page in /pages and optionally add a homepage card."""
+    dates = get_current_date()
+
+    base = (filename_or_slug or title or "").strip()
+    base = re.sub(r'\.html?$', '', base, flags=re.IGNORECASE).strip()
+    if not base:
+        base = title.strip()
+
+    slug = slugify(base)
+    filename = f"{slug}.html"
+
+    # Basic fallbacks
+    meta_description = (description or abstract or "").strip()
+
+    # Page template (mirrors /pages/* structure)
+    page_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} • H. Aslan</title>
+  <meta name="description" content="{meta_description}">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+  <nav id="sidenav">
+    <div class="nav-header">
+      <h1><a href="../index.html">H. Aslan</a></h1>
+      <p class="tagline">Notes from the margins</p>
+    </div>
+
+    <section class="nav-section">
+      <h2>Topics</h2>
+      <ul>
+        <li><a href="creative-writing.html">Creative Writing</a></li>
+        <li><a href="quotes.html">Quotes</a></li>
+        <li><a href="definitions.html">Definitions</a></li>
+        <li><a href="personal-domain.html">Personal Domain</a></li>
+        <li><a href="demo.html">Demo</a></li>
+      </ul>
+    </section>
+
+    <section class="nav-section">
+      <h2>Connect</h2>
+      <ul>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </section>
+
+    <div class="theme-toggle">
+      <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+        <span class="sun">☀</span>
+        <span class="moon">☾</span>
+      </button>
+    </div>
+  </nav>
+
+  <main id="content">
+    <article>
+      <a href="../index.html" class="back-link">Back to Home</a>
+
+      <header class="page-header">
+        <h1>{title}</h1>
+        <div class="page-metadata">
+          <time datetime="{dates['iso']}">{dates['display']}</time>
+        </div>
+      </header>
+
+      {"<div class='abstract'><p><span class='abstract-label'>Abstract:</span> " + abstract + "</p></div>" if (abstract or "").strip() else ""}
+
+      {content_html}
+    </article>
+  </main>
+
+  <script src="../assets/js/script.js"></script>
+</body>
+</html>
+"""
+
+    PAGES_DIR.mkdir(exist_ok=True)
+    page_file = PAGES_DIR / filename
+    with open(page_file, "w", encoding="utf-8") as f:
+        f.write(page_html)
+
+    # Optionally add a card to the homepage grid
+    added_to_home = False
+    if add_to_home:
+        home_file = WIKI_ROOT / "index.html"
+        with open(home_file, "r", encoding="utf-8") as f:
+            home = f.read()
+
+        marker = '<div class="topic-grid">'
+        if marker in home:
+            blurb = (description or abstract or "").strip()
+            if not blurb:
+                blurb = "—"
+
+            card_html = f'''
+                    <div class="topic-card">
+                        <h3><a href="pages/{filename}">{title}</a></h3>
+                        <p>{blurb}</p>
+                    </div>
+'''
+
+            insert_pos = home.find(marker) + len(marker)
+            home_new = home[:insert_pos] + card_html + home[insert_pos:]
+            with open(home_file, "w", encoding="utf-8") as f:
+                f.write(home_new)
+
+            added_to_home = True
+
+    return True, filename, added_to_home
+
 # ============================================
 # HTML TEMPLATE
 # ============================================
@@ -335,6 +473,9 @@ HTML_TEMPLATE = '''
                 </a>
                 <a href="?tab=writing" class="py-3 px-1 text-sm font-medium {{ 'tab-active' if tab == 'writing' else 'text-gray-500 hover:text-gray-700' }}">
                     Add Writing
+                </a>
+                <a href="?tab=page" class="py-3 px-1 text-sm font-medium {{ 'tab-active' if tab == 'page' else 'text-gray-500 hover:text-gray-700' }}">
+                    Add Page
                 </a>
                 <a href="?tab=deploy" class="py-3 px-1 text-sm font-medium {{ 'tab-active' if tab == 'deploy' else 'text-gray-500 hover:text-gray-700' }}">
                     Deploy
@@ -405,10 +546,10 @@ HTML_TEMPLATE = '''
 Second paragraph if needed..."></textarea>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Related Terms (optional, comma-separated)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Related Terms (optional, comma-separated; use Term|note for annotations)</label>
                 <input type="text" name="related"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
-                    placeholder="e.g., Integrity, Conformity">
+                    placeholder="e.g., Integrity, Conformity|opposite, Authenticity|adjacent">
             </div>
             <button type="submit" 
                 class="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition">
@@ -458,6 +599,60 @@ Second paragraph if needed..."></textarea>
             <button type="submit" 
                 class="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition">
                 Add Writing
+            </button>
+        </form>
+        {% endif %}
+
+        <!-- Page Form -->
+        {% if tab == 'page' %}
+        <form method="POST" action="/add-page" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <input type="text" name="title" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    placeholder="e.g., Personal Domains and Narrative Sovereignty">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filename/Slug (optional)</label>
+                <input type="text" name="filename"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    placeholder="e.g., personal-domain (auto-generated from title if blank)">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description (optional, for meta and homepage card)</label>
+                <input type="text" name="description"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    placeholder="Short blurb for meta/home card">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Abstract (optional, appears on page)</label>
+                <textarea name="abstract" rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    placeholder="If provided, appears as the on-page Abstract block."></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Content (HTML)</label>
+                <p class="text-xs text-gray-500 mb-2">You can paste full sections. This gets inserted into the page body.</p>
+                <textarea name="content" rows="12" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm"
+                    placeholder="<section id=&quot;intro&quot;>
+  <p>Your content here...</p>
+</section>"></textarea>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="add_to_home" id="add_to_home"
+                    class="h-4 w-4">
+                <label for="add_to_home" class="text-sm text-gray-700">Also add a card to the homepage</label>
+            </div>
+
+            <button type="submit"
+                class="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition">
+                Create Page
             </button>
         </form>
         {% endif %}
@@ -581,6 +776,28 @@ def handle_add_writing():
             return redirect(url_for('index', tab='writing', message='Error: Could not update index', success='false'))
     except Exception as e:
         return redirect(url_for('index', tab='writing', message=f'Error: {e}', success='false'))
+
+@app.route('/add-page', methods=['POST'])
+def handle_add_page():
+    try:
+        add_to_home = request.form.get('add_to_home') == 'on'
+        success, filename, added = add_page(
+            title=request.form['title'],
+            filename_or_slug=request.form.get('filename', ''),
+            description=request.form.get('description', ''),
+            abstract=request.form.get('abstract', ''),
+            content_html=request.form['content'],
+            add_to_home=add_to_home
+        )
+        if success:
+            msg = f'Page created! File: pages/{filename}'
+            if add_to_home and not added:
+                msg += ' (Note: homepage insertion marker not found)'
+            return redirect(url_for('index', tab='page', message=msg, success='true'))
+        else:
+            return redirect(url_for('index', tab='page', message='Error: could not create page', success='false'))
+    except Exception as e:
+        return redirect(url_for('index', tab='page', message=f'Error: {e}', success='false'))
 
 @app.route('/deploy', methods=['POST'])
 def handle_deploy():
