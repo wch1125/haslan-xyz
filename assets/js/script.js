@@ -812,40 +812,307 @@
     // ============================================
     
     const DefinitionIndex = {
+        definitions: [],
+        graph: { outgoing: {}, incoming: {} },
+        
         init() {
             const container = document.getElementById('alpha-index');
-            const definitions = document.querySelectorAll('.definition-entry');
+            const definitionsList = document.getElementById('definitions-list');
+            const entries = document.querySelectorAll('.definition-entry');
             
-            if (!container || definitions.length === 0) return;
+            if (!container || entries.length === 0) return;
             
-            const letters = new Set();
-            definitions.forEach(def => {
-                const letterSpan = def.querySelector('.definition-letter');
-                if (letterSpan) {
-                    letters.add(letterSpan.textContent.trim().toUpperCase());
-                }
+            // Build definition data
+            this.buildDefinitionData(entries);
+            
+            // Build cross-reference graph
+            this.buildGraph(entries);
+            
+            // Inject toolbar
+            this.injectToolbar(definitionsList);
+            
+            // Render alpha index
+            this.renderAlphaIndex(container);
+            
+            // Add cross-reference UI to each entry
+            this.renderCrossReferences(entries);
+            
+            // Setup event listeners
+            this.setupSearch();
+            this.setupSort();
+        },
+        
+        buildDefinitionData(entries) {
+            entries.forEach(entry => {
+                const id = entry.id;
+                const termEl = entry.querySelector('.definition-term');
+                const letterEl = entry.querySelector('.definition-letter');
+                const dateEl = entry.querySelector('.definition-date');
+                
+                this.definitions.push({
+                    id,
+                    element: entry,
+                    term: termEl ? termEl.textContent.trim() : id,
+                    letter: letterEl ? letterEl.textContent.trim().toUpperCase() : '',
+                    date: dateEl ? dateEl.textContent.replace('Added:', '').trim() : '',
+                    connections: 0 // Will be calculated after graph is built
+                });
+            });
+        },
+        
+        buildGraph(entries) {
+            // Initialize graph nodes
+            this.definitions.forEach(def => {
+                this.graph.outgoing[def.id] = [];
+                this.graph.incoming[def.id] = [];
             });
             
-            const sortedLetters = Array.from(letters).sort();
-            
-            container.innerHTML = '';
-            sortedLetters.forEach(letter => {
-                const link = document.createElement('a');
-                link.href = '#' + letter;
-                link.textContent = letter;
-                container.appendChild(link);
+            // Find all internal links in each definition
+            entries.forEach(entry => {
+                const sourceId = entry.id;
+                const content = entry.querySelector('.definition-content');
+                if (!content) return;
                 
-                definitions.forEach(def => {
-                    const letterSpan = def.querySelector('.definition-letter');
-                    if (letterSpan && letterSpan.textContent.trim().toUpperCase() === letter) {
-                        if (!document.getElementById(letter)) {
-                            const anchor = document.createElement('a');
-                            anchor.setAttribute('name', letter);
-                            anchor.id = letter;
-                            def.parentNode.insertBefore(anchor, def);
+                // Find all links to other definitions
+                const links = content.querySelectorAll('a[href^="#"]');
+                links.forEach(link => {
+                    const targetId = link.getAttribute('href').substring(1);
+                    
+                    // Only count if target exists in our definitions
+                    if (this.graph.outgoing[targetId] !== undefined) {
+                        // Avoid duplicates
+                        if (!this.graph.outgoing[sourceId].includes(targetId)) {
+                            this.graph.outgoing[sourceId].push(targetId);
+                        }
+                        if (!this.graph.incoming[targetId].includes(sourceId)) {
+                            this.graph.incoming[targetId].push(sourceId);
                         }
                     }
                 });
+            });
+            
+            // Calculate total connections for each definition
+            this.definitions.forEach(def => {
+                def.connections = 
+                    (this.graph.outgoing[def.id]?.length || 0) + 
+                    (this.graph.incoming[def.id]?.length || 0);
+            });
+        },
+        
+        injectToolbar(container) {
+            const toolbar = document.createElement('div');
+            toolbar.className = 'definitions-toolbar';
+            toolbar.innerHTML = `
+                <div class="definitions-search">
+                    <input type="text" id="def-search" placeholder="Search definitions..." aria-label="Search definitions">
+                </div>
+                <div class="definitions-sort">
+                    <label for="def-sort">Sort:</label>
+                    <select id="def-sort">
+                        <option value="alpha-asc">A → Z</option>
+                        <option value="alpha-desc">Z → A</option>
+                        <option value="connections">Most Connected</option>
+                        <option value="recent">Recently Added</option>
+                    </select>
+                </div>
+                <div class="definitions-stats">
+                    <span id="def-count">${this.definitions.length}</span> definitions
+                </div>
+            `;
+            
+            container.parentNode.insertBefore(toolbar, container);
+        },
+        
+        renderAlphaIndex(container) {
+            const letters = new Set();
+            this.definitions.forEach(def => {
+                if (def.letter) letters.add(def.letter);
+            });
+            
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            container.innerHTML = '';
+            
+            alphabet.forEach(letter => {
+                const link = document.createElement('a');
+                link.href = '#letter-' + letter;
+                link.textContent = letter;
+                
+                if (!letters.has(letter)) {
+                    link.classList.add('disabled');
+                    link.removeAttribute('href');
+                }
+                
+                container.appendChild(link);
+            });
+            
+            // Add letter anchors to entries
+            let currentLetter = '';
+            this.definitions
+                .sort((a, b) => a.term.localeCompare(b.term))
+                .forEach(def => {
+                    if (def.letter && def.letter !== currentLetter) {
+                        currentLetter = def.letter;
+                        const anchor = document.createElement('a');
+                        anchor.id = 'letter-' + currentLetter;
+                        def.element.parentNode.insertBefore(anchor, def.element);
+                    }
+                });
+        },
+        
+        renderCrossReferences(entries) {
+            entries.forEach(entry => {
+                const id = entry.id;
+                const content = entry.querySelector('.definition-content');
+                if (!content) return;
+                
+                const outgoing = this.graph.outgoing[id] || [];
+                const incoming = this.graph.incoming[id] || [];
+                
+                // Add connection badge to header
+                const header = entry.querySelector('h3');
+                if (header && (outgoing.length > 0 || incoming.length > 0)) {
+                    const badge = document.createElement('span');
+                    badge.className = 'definition-connections';
+                    badge.innerHTML = `
+                        <span class="refs-out" title="References">${outgoing.length}→</span>
+                        <span class="separator">|</span>
+                        <span class="refs-in" title="Referenced by">←${incoming.length}</span>
+                    `;
+                    header.appendChild(badge);
+                }
+                
+                // Add cross-reference section
+                const crossrefs = document.createElement('div');
+                crossrefs.className = 'definition-crossrefs';
+                
+                // Outgoing references (what this links to)
+                if (outgoing.length > 0) {
+                    crossrefs.appendChild(this.createCrossrefSection(
+                        'References',
+                        '→',
+                        'refs-out',
+                        outgoing
+                    ));
+                }
+                
+                // Incoming references (what links to this)
+                if (incoming.length > 0) {
+                    crossrefs.appendChild(this.createCrossrefSection(
+                        'Referenced by',
+                        '←',
+                        'refs-in',
+                        incoming
+                    ));
+                }
+                
+                if (outgoing.length > 0 || incoming.length > 0) {
+                    content.appendChild(crossrefs);
+                }
+            });
+        },
+        
+        createCrossrefSection(label, arrow, className, ids) {
+            const section = document.createElement('div');
+            section.className = 'crossref-section';
+            
+            const labelEl = document.createElement('div');
+            labelEl.className = 'crossref-label ' + className;
+            labelEl.innerHTML = `<span class="arrow">${arrow}</span> ${label}`;
+            section.appendChild(labelEl);
+            
+            const links = document.createElement('div');
+            links.className = 'crossref-links';
+            
+            ids.forEach(id => {
+                const def = this.definitions.find(d => d.id === id);
+                const link = document.createElement('a');
+                link.href = '#' + id;
+                link.className = 'crossref-link';
+                link.textContent = def ? def.term : id;
+                links.appendChild(link);
+            });
+            
+            section.appendChild(links);
+            return section;
+        },
+        
+        setupSearch() {
+            const input = document.getElementById('def-search');
+            if (!input) return;
+            
+            input.addEventListener('input', Utils.debounce(() => {
+                const query = input.value.toLowerCase().trim();
+                let visibleCount = 0;
+                
+                this.definitions.forEach(def => {
+                    const matches = query === '' || 
+                        def.term.toLowerCase().includes(query) ||
+                        def.element.textContent.toLowerCase().includes(query);
+                    
+                    def.element.classList.toggle('filtered-out', !matches);
+                    if (matches) visibleCount++;
+                });
+                
+                // Update count
+                const countEl = document.getElementById('def-count');
+                if (countEl) {
+                    countEl.textContent = visibleCount;
+                }
+            }, 150));
+        },
+        
+        setupSort() {
+            const select = document.getElementById('def-sort');
+            if (!select) return;
+            
+            select.addEventListener('change', () => {
+                const value = select.value;
+                const container = document.getElementById('definitions-list');
+                if (!container) return;
+                
+                // Get current entries
+                const entries = Array.from(container.querySelectorAll('.definition-entry'));
+                
+                // Sort based on selection
+                entries.sort((a, b) => {
+                    const defA = this.definitions.find(d => d.id === a.id);
+                    const defB = this.definitions.find(d => d.id === b.id);
+                    if (!defA || !defB) return 0;
+                    
+                    switch(value) {
+                        case 'alpha-asc':
+                            return defA.term.localeCompare(defB.term);
+                        case 'alpha-desc':
+                            return defB.term.localeCompare(defA.term);
+                        case 'connections':
+                            return defB.connections - defA.connections;
+                        case 'recent':
+                            // Parse dates and sort newest first
+                            return defB.date.localeCompare(defA.date);
+                        default:
+                            return 0;
+                    }
+                });
+                
+                // Remove letter anchors (we'll re-add them if sorting alpha)
+                container.querySelectorAll('a[id^="letter-"]').forEach(a => a.remove());
+                
+                // Reorder in DOM
+                entries.forEach(entry => container.appendChild(entry));
+                
+                // Re-add letter anchors if sorting alphabetically
+                if (value === 'alpha-asc' || value === 'alpha-desc') {
+                    let currentLetter = '';
+                    entries.forEach(entry => {
+                        const def = this.definitions.find(d => d.id === entry.id);
+                        if (def && def.letter && def.letter !== currentLetter) {
+                            currentLetter = def.letter;
+                            const anchor = document.createElement('a');
+                            anchor.id = 'letter-' + currentLetter;
+                            entry.parentNode.insertBefore(anchor, entry);
+                        }
+                    });
+                }
             });
         }
     };
