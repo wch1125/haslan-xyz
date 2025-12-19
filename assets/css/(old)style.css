@@ -426,6 +426,7 @@ blockquote {
 
 /* ============================================
    SIDENOTES (Tufte-style)
+   Fixed positioning approach
    ============================================ */
 
 .sidenote {
@@ -446,21 +447,105 @@ blockquote {
     cursor: help;
 }
 
+/* Desktop sidenotes - positioned by JavaScript */
 .sidenote-content {
     display: none;
-    position: absolute;
-    left: calc(var(--content-width) + 2rem);
+    position: fixed; /* Changed from absolute - JS will position */
     width: var(--sidenote-width);
     font-size: 0.85rem;
     line-height: 1.4;
     color: var(--text-secondary);
     background: var(--sidenote-bg);
     padding: 0.75rem;
-    border-left: 2px solid var(--border-color);
+    border-left: 2px solid var(--accent-gold);
+    border-radius: 0 4px 4px 0;
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-.sidenote:hover .sidenote-content {
+/* Show on hover - JS positions it correctly */
+.sidenote:hover .sidenote-content,
+.sidenote:focus-within .sidenote-content {
     display: block;
+}
+
+/* When JS has positioned the sidenote, it adds this class */
+.sidenote-content.positioned {
+    display: block;
+    opacity: 1;
+}
+
+/* ============================================
+   MOBILE SIDENOTES
+   ============================================ */
+
+.sidenote-mobile-wrapper {
+    display: inline;
+}
+
+.sidenote-mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-gold-muted);
+    border: 1px solid var(--accent-gold);
+    border-radius: 50%;
+    width: 1.4em;
+    height: 1.4em;
+    font-size: 0.75rem;
+    cursor: pointer;
+    vertical-align: super;
+    margin: 0 0.15em;
+    padding: 0;
+    transition: all var(--transition-fast);
+}
+
+.sidenote-mobile-toggle:hover,
+.sidenote-mobile-toggle.active {
+    background: var(--accent-gold);
+}
+
+.sidenote-mobile-toggle:hover .sidenote-mobile-number,
+.sidenote-mobile-toggle.active .sidenote-mobile-number {
+    color: white;
+}
+
+.sidenote-mobile-number {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+    line-height: 1;
+}
+
+.sidenote-mobile-content {
+    display: block;
+    background: var(--sidenote-bg);
+    border-left: 2px solid var(--accent-gold);
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    border-radius: 0 4px 4px 0;
+    animation: sidenoteExpand 0.2s ease-out;
+}
+
+.sidenote-mobile-content[hidden] {
+    display: none;
+}
+
+@keyframes sidenoteExpand {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================
@@ -1003,129 +1088,6 @@ a.definition-link:visited {
     line-height: 1.5;
 }
 
-/* Mobile popup enhancements */
-.link-popup-actions {
-    display: none;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-color);
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.link-popup-goto {
-    font-family: var(--font-sans);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--accent-gold);
-    text-decoration: none;
-    border: none;
-}
-
-.link-popup-goto:hover {
-    text-decoration: underline;
-}
-
-.link-popup-close {
-    background: none;
-    border: none;
-    color: var(--text-tertiary);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    transition: all var(--transition-fast);
-}
-
-.link-popup-close:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-/* Show actions on touch devices */
-@media (hover: none), (pointer: coarse) {
-    .link-popup-actions {
-        display: flex;
-    }
-    
-    .link-popup {
-        max-width: calc(100vw - 32px);
-        pointer-events: auto;
-    }
-}
-
-/* ============================================
-   MOBILE SIDENOTES
-   ============================================ */
-
-.sidenote-mobile-wrapper {
-    display: inline;
-}
-
-.sidenote-mobile-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent-gold-muted);
-    border: 1px solid var(--accent-gold);
-    border-radius: 50%;
-    width: 1.4em;
-    height: 1.4em;
-    font-size: 0.75rem;
-    cursor: pointer;
-    vertical-align: super;
-    margin: 0 0.15em;
-    padding: 0;
-    transition: all var(--transition-fast);
-}
-
-.sidenote-mobile-toggle:hover,
-.sidenote-mobile-toggle.active {
-    background: var(--accent-gold);
-}
-
-.sidenote-mobile-toggle:hover .sidenote-mobile-number,
-.sidenote-mobile-toggle.active .sidenote-mobile-number {
-    color: white;
-}
-
-.sidenote-mobile-number {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-size: 0.7rem;
-    color: var(--accent-gold);
-    line-height: 1;
-}
-
-.sidenote-mobile-content {
-    display: block;
-    background: var(--sidenote-bg);
-    border-left: 2px solid var(--accent-gold);
-    padding: 0.75rem 1rem;
-    margin: 0.75rem 0;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: var(--text-secondary);
-    border-radius: 0 4px 4px 0;
-    animation: sidenoteExpand 0.2s ease-out;
-}
-
-.sidenote-mobile-content[hidden] {
-    display: none;
-}
-
-@keyframes sidenoteExpand {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* ============================================
    VERSE / POETRY FORMATTING
    ============================================ */
@@ -1266,14 +1228,12 @@ a.definition-link:visited {
    ============================================ */
 
 @media (max-width: 1100px) {
-    /* Hide the desktop sidenote-content positioning (JS handles mobile conversion) */
+    /* Hide desktop sidenotes - JS converts to mobile inline notes */
     .sidenote-content {
-        /* Allow JS to control visibility instead of hiding completely */
-        position: static;
-        display: none;
+        display: none !important;
     }
     
-    /* Keep the number visible for JS to detect */
+    /* Hide the desktop sidenote number - mobile version has its own */
     .sidenote-number {
         display: none;
     }
