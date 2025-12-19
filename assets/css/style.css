@@ -1168,15 +1168,7 @@ a.definition-link:visited {
     transform: translateX(-4px);
 }
 
-.back-link::before {
-    content: '← ';
-    margin-right: 0.5rem;
-    transition: transform var(--transition-fast);
-}
-
-.back-link:hover::before {
-    transform: translateX(-4px);
-}
+/* Arrow is in HTML content, so just animate the whole link */
 
 /* ============================================
    CONTACT FORM
