@@ -72,6 +72,30 @@ def get_current_date():
         'month_year': now.strftime('%B %Y')
     }
 
+# Badge system mapping - categories to CSS classes and display names
+BADGE_MAP = {
+    'essay': {'class': 'badge-essay', 'label': 'Essay'},
+    'sketch': {'class': 'badge-sketch', 'label': 'Sketch'},
+    'notebook': {'class': 'badge-notebook', 'label': 'Notebook'},
+    'fiction': {'class': 'badge-fiction', 'label': 'Fiction'},
+    'draft': {'class': 'badge-draft', 'label': 'Draft'},
+}
+
+def get_badge_html(category):
+    """Convert category to proper badge HTML"""
+    cat_lower = category.lower().strip()
+    
+    if cat_lower in BADGE_MAP:
+        badge = BADGE_MAP[cat_lower]
+        return f'<span class="content-badge {badge["class"]}">{badge["label"]}</span>'
+    
+    # Fallback for unrecognized categories - use plain text
+    return f'<span class="writing-category">{category}</span>'
+
+def get_badge_data_category(category):
+    """Get normalized data-category value"""
+    return category.lower().strip()
+
 def git_status():
     """Check if there are uncommitted changes"""
     try:
@@ -213,6 +237,10 @@ def add_writing(title, category, excerpt, content_text):
     slug = slugify(title)
     filename = f"{slug}.html"
     
+    # Get badge HTML for this category
+    badge_html = get_badge_html(category)
+    data_category = get_badge_data_category(category)
+    
     # Create the writing page
     writing_html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -263,7 +291,7 @@ def add_writing(title, category, excerpt, content_text):
             <header class="page-header">
                 <h1>{title}</h1>
                 <div class="page-metadata">
-                    <span class="writing-category">{category}</span>
+                    {badge_html}
                     <time datetime="{dates['iso']}">{dates['display']}</time>
                 </div>
             </header>
@@ -287,10 +315,10 @@ def add_writing(title, category, excerpt, content_text):
     
     # Add entry to creative-writing.html index
     index_entry = f'''
-                    <div class="writing-card" data-category="{category.lower()}">
+                    <div class="writing-card" data-category="{data_category}">
                         <h3><a href="writing/{filename}">{title}</a></h3>
                         <div class="writing-metadata">
-                            <span class="writing-category">{category}</span>
+                            {badge_html}
                             <time datetime="{dates['iso']}">{dates['display']}</time>
                         </div>
                         <p class="writing-excerpt">{excerpt}</p>
@@ -572,13 +600,13 @@ Second paragraph if needed..."></textarea>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                     <select name="category" required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500">
-                        <option value="Essay">Essay</option>
-                        <option value="Fragment">Fragment</option>
-                        <option value="Poem">Poem</option>
-                        <option value="Short Story">Short Story</option>
-                        <option value="Observation">Observation</option>
-                        <option value="Analysis">Analysis</option>
+                        <option value="Essay">Essay — Argued and structured</option>
+                        <option value="Sketch">Sketch — Speculative, exploring</option>
+                        <option value="Notebook">Notebook — Working notes, rough</option>
+                        <option value="Fiction">Fiction — Creative work</option>
+                        <option value="Draft">Draft — Unfinished, for accountability</option>
                     </select>
+                    <p class="text-xs text-gray-500 mt-1">These match the Reading Guide badges on the Writing page</p>
                 </div>
             </div>
             <div>
