@@ -448,18 +448,23 @@ blockquote {
 
 .sidenote-content {
     display: none;
-    position: absolute;
-    left: calc(var(--content-width) + 2rem);
+    position: fixed;
     width: var(--sidenote-width);
     font-size: 0.85rem;
     line-height: 1.4;
     color: var(--text-secondary);
     background: var(--sidenote-bg);
     padding: 0.75rem;
-    border-left: 2px solid var(--border-color);
+    border-left: 2px solid var(--accent-gold);
+    border-radius: 0 4px 4px 0;
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+    /* JS will handle positioning and display */
 }
 
-.sidenote:hover .sidenote-content {
+.sidenote-content.visible {
     display: block;
 }
 

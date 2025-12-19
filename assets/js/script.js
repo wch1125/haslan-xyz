@@ -519,6 +519,104 @@
     };
 
     // ============================================
+    // DESKTOP SIDENOTES
+    // Positions sidenotes in right margin on hover
+    // ============================================
+    
+    const DesktopSidenotes = {
+        init() {
+            // Only activate on wider screens
+            const mql = window.matchMedia('(min-width: 1101px)');
+            
+            if (mql.matches) {
+                this.setup();
+            }
+            
+            mql.addEventListener('change', (e) => {
+                if (e.matches) {
+                    this.setup();
+                } else {
+                    this.teardown();
+                }
+            });
+        },
+        
+        setup() {
+            document.querySelectorAll('.sidenote').forEach(sidenote => {
+                const content = sidenote.querySelector('.sidenote-content');
+                const number = sidenote.querySelector('.sidenote-number');
+                if (!content) return;
+                
+                // Show on hover/focus
+                const showSidenote = () => {
+                    this.positionSidenote(sidenote, content);
+                    content.classList.add('visible');
+                };
+                
+                const hideSidenote = () => {
+                    content.classList.remove('visible');
+                };
+                
+                sidenote.addEventListener('mouseenter', showSidenote);
+                sidenote.addEventListener('mouseleave', hideSidenote);
+                if (number) {
+                    number.addEventListener('focus', showSidenote);
+                    number.addEventListener('blur', hideSidenote);
+                }
+                
+                // Store handlers for cleanup
+                sidenote._desktopHandlers = { showSidenote, hideSidenote };
+            });
+        },
+        
+        teardown() {
+            document.querySelectorAll('.sidenote').forEach(sidenote => {
+                const content = sidenote.querySelector('.sidenote-content');
+                if (content) content.classList.remove('visible');
+                
+                if (sidenote._desktopHandlers) {
+                    sidenote.removeEventListener('mouseenter', sidenote._desktopHandlers.showSidenote);
+                    sidenote.removeEventListener('mouseleave', sidenote._desktopHandlers.hideSidenote);
+                    delete sidenote._desktopHandlers;
+                }
+            });
+        },
+        
+        positionSidenote(sidenote, content) {
+            const contentArea = document.getElementById('content');
+            if (!contentArea) return;
+            
+            // Get positions
+            const sidenoteRect = sidenote.getBoundingClientRect();
+            const contentRect = contentArea.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Position sidenote in right margin
+            // Start at right edge of content area + small gap
+            let leftPos = contentRect.right + 16;
+            
+            // If not enough room on right, position relative to viewport
+            const sidenoteWidth = 240; // var(--sidenote-width)
+            if (leftPos + sidenoteWidth > viewportWidth - 16) {
+                leftPos = viewportWidth - sidenoteWidth - 16;
+            }
+            
+            // Vertical position: align with the sidenote reference
+            let topPos = sidenoteRect.top;
+            
+            // Keep within viewport bounds
+            const maxHeight = 300;
+            if (topPos + maxHeight > window.innerHeight - 16) {
+                topPos = window.innerHeight - maxHeight - 16;
+            }
+            if (topPos < 16) topPos = 16;
+            
+            content.style.left = `${leftPos}px`;
+            content.style.top = `${topPos}px`;
+        }
+    };
+
+    // ============================================
     // MOBILE SIDENOTES
     // Converts sidenotes to expandable inline notes on mobile/tablet
     // ============================================
@@ -887,6 +985,7 @@
         ScrollReveal.init();
         AutoEnhance.init();
         LinkPopup.init();
+        DesktopSidenotes.init();
         MobileSidenotes.init();
         Keyboard.init();
         SmoothScroll.init();
@@ -915,6 +1014,7 @@
         LinkPopup,
         AutoEnhance,
         LoadingScreen,
+        DesktopSidenotes,
         MobileSidenotes
     };
 

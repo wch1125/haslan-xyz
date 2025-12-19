@@ -370,16 +370,33 @@
     };
 
     // ============================================
-    // ENHANCED LINK POPUP
+    // ENHANCED LINK POPUP (with Mobile Support)
     // ============================================
     
     const LinkPopup = {
         popup: null,
         timeout: null,
+        activeLink: null,
+        isTouchDevice: false,
         
         init() {
+            // Detect touch capability
+            this.isTouchDevice = ('ontouchstart' in window) || 
+                                 (navigator.maxTouchPoints > 0) ||
+                                 (navigator.msMaxTouchPoints > 0);
+            
             this.createPopup();
             this.attachDefinitionListeners();
+            
+            // Close popup when tapping elsewhere on mobile
+            if (this.isTouchDevice) {
+                document.addEventListener('touchstart', (e) => {
+                    if (!e.target.closest('.link-popup') && !e.target.closest('.definition-link')) {
+                        this.hide();
+                        this.activeLink = null;
+                    }
+                });
+            }
         },
         
         createPopup() {
@@ -388,23 +405,69 @@
             this.popup.innerHTML = `
                 <div class="link-popup-title"></div>
                 <div class="link-popup-excerpt"></div>
+                <div class="link-popup-actions">
+                    <a class="link-popup-goto" href="#">Go to definition →</a>
+                    <button class="link-popup-close" aria-label="Close">✕</button>
+                </div>
             `;
             document.body.appendChild(this.popup);
+            
+            // Handle "Go to definition" click
+            this.popup.querySelector('.link-popup-goto').addEventListener('click', (e) => {
+                if (this.activeLink) {
+                    window.location.href = this.activeLink.href;
+                }
+            });
+            
+            // Handle close button
+            this.popup.querySelector('.link-popup-close').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hide();
+                this.activeLink = null;
+            });
         },
         
         attachDefinitionListeners() {
             document.querySelectorAll('a.definition-link').forEach(link => {
-                link.addEventListener('mouseenter', (e) => this.show(e));
-                link.addEventListener('mouseleave', () => this.hide());
+                // Desktop: hover behavior
+                link.addEventListener('mouseenter', (e) => {
+                    if (!this.isTouchDevice) {
+                        this.show(e);
+                    }
+                });
+                link.addEventListener('mouseleave', () => {
+                    if (!this.isTouchDevice) {
+                        this.hide();
+                    }
+                });
+                
+                // Keyboard accessibility
                 link.addEventListener('focus', (e) => this.show(e));
                 link.addEventListener('blur', () => this.hide());
+                
+                // Mobile: tap behavior
+                link.addEventListener('click', (e) => {
+                    if (this.isTouchDevice) {
+                        // First tap: show popup, prevent navigation
+                        // Second tap on same link: navigate
+                        if (this.activeLink === link && this.popup.classList.contains('show')) {
+                            // Second tap - allow navigation
+                            return;
+                        }
+                        
+                        e.preventDefault();
+                        this.activeLink = link;
+                        this.show(e);
+                    }
+                });
             });
         },
         
         show(e) {
             clearTimeout(this.timeout);
             
-            const link = e.target;
+            const link = e.target.closest('.definition-link') || e.target;
             const term = link.dataset.term;
             const definition = link.dataset.definition;
             
@@ -412,10 +475,11 @@
             
             this.popup.querySelector('.link-popup-title').textContent = term;
             this.popup.querySelector('.link-popup-excerpt').textContent = definition;
+            this.popup.querySelector('.link-popup-goto').href = link.href;
             
             // Position popup
             const rect = link.getBoundingClientRect();
-            const popupHeight = 120;
+            const popupHeight = this.isTouchDevice ? 160 : 120;
             const spaceAbove = rect.top;
             const spaceBelow = window.innerHeight - rect.bottom;
             
@@ -427,22 +491,118 @@
                 top = rect.top + window.scrollY - popupHeight - 8;
             }
             
-            left = Math.max(16, Math.min(
-                rect.left + window.scrollX,
-                window.innerWidth - 420
-            ));
+            // On mobile, center the popup horizontally for better readability
+            if (this.isTouchDevice) {
+                const popupWidth = Math.min(window.innerWidth - 32, 400);
+                left = Math.max(16, (window.innerWidth - popupWidth) / 2);
+            } else {
+                left = Math.max(16, Math.min(
+                    rect.left + window.scrollX,
+                    window.innerWidth - 420
+                ));
+            }
             
             this.popup.style.top = `${top}px`;
             this.popup.style.left = `${left}px`;
             
+            // Show faster on mobile since user explicitly tapped
+            const delay = this.isTouchDevice ? 0 : 100;
             this.timeout = setTimeout(() => {
                 this.popup.classList.add('show');
-            }, 100);
+            }, delay);
         },
         
         hide() {
             clearTimeout(this.timeout);
             this.popup.classList.remove('show');
+        }
+    };
+
+    // ============================================
+    // MOBILE SIDENOTES
+    // Converts sidenotes to expandable inline notes on mobile/tablet
+    // ============================================
+    
+    const MobileSidenotes = {
+        init() {
+            // Only activate on narrower screens where sidenotes don't fit
+            const mql = window.matchMedia('(max-width: 1100px)');
+            
+            if (mql.matches) {
+                this.convertToInline();
+            }
+            
+            // Handle orientation changes / resize
+            mql.addEventListener('change', (e) => {
+                if (e.matches) {
+                    this.convertToInline();
+                } else {
+                    this.revertToSidenotes();
+                }
+            });
+        },
+        
+        convertToInline() {
+            document.querySelectorAll('.sidenote').forEach((sidenote, index) => {
+                // Skip if already converted
+                if (sidenote.classList.contains('sidenote-mobile-converted')) return;
+                
+                const number = sidenote.querySelector('.sidenote-number');
+                const content = sidenote.querySelector('.sidenote-content');
+                
+                if (!content) return;
+                
+                // Mark as converted
+                sidenote.classList.add('sidenote-mobile-converted');
+                
+                // Create expandable inline note
+                const wrapper = document.createElement('span');
+                wrapper.className = 'sidenote-mobile-wrapper';
+                
+                const toggle = document.createElement('button');
+                toggle.className = 'sidenote-mobile-toggle';
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', `Show note ${index + 1}`);
+                toggle.innerHTML = `<span class="sidenote-mobile-number">${index + 1}</span>`;
+                
+                const inlineContent = document.createElement('span');
+                inlineContent.className = 'sidenote-mobile-content';
+                inlineContent.innerHTML = content.innerHTML;
+                inlineContent.hidden = true;
+                
+                // Toggle behavior
+                toggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', !isExpanded);
+                    inlineContent.hidden = isExpanded;
+                    toggle.classList.toggle('active', !isExpanded);
+                });
+                
+                wrapper.appendChild(toggle);
+                wrapper.appendChild(inlineContent);
+                
+                // Hide original sidenote elements
+                if (number) number.style.display = 'none';
+                content.style.display = 'none';
+                
+                // Insert the mobile version
+                sidenote.appendChild(wrapper);
+            });
+        },
+        
+        revertToSidenotes() {
+            document.querySelectorAll('.sidenote-mobile-converted').forEach(sidenote => {
+                const wrapper = sidenote.querySelector('.sidenote-mobile-wrapper');
+                const number = sidenote.querySelector('.sidenote-number');
+                const content = sidenote.querySelector('.sidenote-content');
+                
+                if (wrapper) wrapper.remove();
+                if (number) number.style.display = '';
+                if (content) content.style.display = '';
+                
+                sidenote.classList.remove('sidenote-mobile-converted');
+            });
         }
     };
 
@@ -684,169 +844,6 @@
     };
 
     // ============================================
-    // SIDENOTES - Desktop & Mobile
-    // Desktop: Positions sidenotes in margin on hover
-    // Mobile: Converts to expandable inline notes
-    // ============================================
-    
-    const Sidenotes = {
-        isMobile: false,
-        sidenotes: [],
-        
-        init() {
-            this.sidenotes = document.querySelectorAll('.sidenote');
-            if (this.sidenotes.length === 0) return;
-            
-            // Check initial viewport
-            this.checkViewport();
-            
-            // Handle resize
-            const mql = window.matchMedia('(max-width: 1100px)');
-            mql.addEventListener('change', () => this.checkViewport());
-            
-            // Initial setup
-            if (this.isMobile) {
-                this.convertToMobile();
-            } else {
-                this.setupDesktop();
-            }
-        },
-        
-        checkViewport() {
-            const wasMobile = this.isMobile;
-            this.isMobile = window.innerWidth <= 1100;
-            
-            // Handle transition between modes
-            if (wasMobile !== this.isMobile) {
-                if (this.isMobile) {
-                    this.cleanupDesktop();
-                    this.convertToMobile();
-                } else {
-                    this.cleanupMobile();
-                    this.setupDesktop();
-                }
-            }
-        },
-        
-        // ==================
-        // DESKTOP: Hover positioning
-        // ==================
-        setupDesktop() {
-            const content = document.getElementById('content');
-            if (!content) return;
-            
-            this.sidenotes.forEach((sidenote) => {
-                const sidenoteContent = sidenote.querySelector('.sidenote-content');
-                if (!sidenoteContent) return;
-                
-                // Position on mouseenter
-                sidenote.addEventListener('mouseenter', (e) => {
-                    this.positionSidenote(sidenote, sidenoteContent, content);
-                });
-                
-                // Also handle focus for keyboard users
-                sidenote.addEventListener('focusin', (e) => {
-                    this.positionSidenote(sidenote, sidenoteContent, content);
-                });
-            });
-        },
-        
-        positionSidenote(sidenote, sidenoteContent, content) {
-            const contentRect = content.getBoundingClientRect();
-            const sidenoteRect = sidenote.getBoundingClientRect();
-            
-            // Calculate position in the right margin
-            // Content ends at contentRect.right, sidenote goes just after
-            const left = contentRect.right + 24; // 24px gap
-            const top = sidenoteRect.top;
-            
-            // Check if there's room on the right
-            const sidenoteWidth = 240; // var(--sidenote-width)
-            const viewportWidth = window.innerWidth;
-            
-            if (left + sidenoteWidth > viewportWidth - 16) {
-                // Not enough room - don't show (mobile mode should handle)
-                sidenoteContent.style.display = 'none';
-                return;
-            }
-            
-            sidenoteContent.style.left = `${left}px`;
-            sidenoteContent.style.top = `${top}px`;
-            sidenoteContent.style.position = 'fixed';
-        },
-        
-        cleanupDesktop() {
-            // Nothing specific to clean up for desktop
-        },
-        
-        // ==================
-        // MOBILE: Inline expandable notes
-        // ==================
-        convertToMobile() {
-            this.sidenotes.forEach((sidenote, index) => {
-                // Skip if already converted
-                if (sidenote.classList.contains('sidenote-mobile-converted')) return;
-                
-                const number = sidenote.querySelector('.sidenote-number');
-                const content = sidenote.querySelector('.sidenote-content');
-                
-                if (!content) return;
-                
-                // Mark as converted
-                sidenote.classList.add('sidenote-mobile-converted');
-                
-                // Create expandable inline note
-                const wrapper = document.createElement('span');
-                wrapper.className = 'sidenote-mobile-wrapper';
-                
-                const toggle = document.createElement('button');
-                toggle.className = 'sidenote-mobile-toggle';
-                toggle.setAttribute('aria-expanded', 'false');
-                toggle.setAttribute('aria-label', `Show note ${index + 1}`);
-                toggle.innerHTML = `<span class="sidenote-mobile-number">${index + 1}</span>`;
-                
-                const inlineContent = document.createElement('span');
-                inlineContent.className = 'sidenote-mobile-content';
-                inlineContent.innerHTML = content.innerHTML;
-                inlineContent.hidden = true;
-                
-                // Toggle behavior
-                toggle.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                    toggle.setAttribute('aria-expanded', !isExpanded);
-                    inlineContent.hidden = isExpanded;
-                    toggle.classList.toggle('active', !isExpanded);
-                });
-                
-                wrapper.appendChild(toggle);
-                wrapper.appendChild(inlineContent);
-                
-                // Hide original sidenote elements
-                if (number) number.style.display = 'none';
-                content.style.display = 'none';
-                
-                // Insert the mobile version
-                sidenote.appendChild(wrapper);
-            });
-        },
-        
-        cleanupMobile() {
-            this.sidenotes.forEach(sidenote => {
-                const wrapper = sidenote.querySelector('.sidenote-mobile-wrapper');
-                const number = sidenote.querySelector('.sidenote-number');
-                const content = sidenote.querySelector('.sidenote-content');
-                
-                if (wrapper) wrapper.remove();
-                if (number) number.style.display = '';
-                if (content) content.style.display = '';
-                
-                sidenote.classList.remove('sidenote-mobile-converted');
-            });
-        }
-    };
-
-    // ============================================
     // UTILITIES
     // ============================================
     
@@ -890,7 +887,7 @@
         ScrollReveal.init();
         AutoEnhance.init();
         LinkPopup.init();
-        Sidenotes.init();
+        MobileSidenotes.init();
         Keyboard.init();
         SmoothScroll.init();
         LazyLoad.init();
@@ -918,7 +915,7 @@
         LinkPopup,
         AutoEnhance,
         LoadingScreen,
-        Sidenotes
+        MobileSidenotes
     };
 
 })();
