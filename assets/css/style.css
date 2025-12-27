@@ -663,6 +663,14 @@ blockquote {
     transition: opacity var(--transition-base);
 }
 
+/* ============================================
+   MOBILE NAV TOGGLE - Hidden by default (desktop)
+   ============================================ */
+
+.mobile-nav-toggle {
+    display: none;
+}
+
 .reading-progress.visible {
     opacity: 1;
 }
@@ -1756,8 +1764,23 @@ a.definition-link:visited {
         transition: transform var(--transition-base);
     }
     
-    #sidenav.open {
+    #sidenav.mobile-open {
         transform: translateY(0);
+    }
+    
+    /* Sidenav collapsed state for mobile */
+    #sidenav.collapsed {
+        transform: translateY(-100%);
+        visibility: hidden;
+    }
+    
+    /* Overlay when nav is open */
+    body.nav-open::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
     }
     
     /* Mobile nav header - always visible */
@@ -1818,27 +1841,7 @@ a.definition-link:visited {
         padding: 0.5rem 1.5rem;
     }
     
-    /* Sidenav collapsed state for mobile */
-    .sidenav.collapsed {
-        transform: translateX(-100%);
-        visibility: hidden;
-    }
-    
-    .sidenav.mobile-open {
-        transform: translateX(0);
-        visibility: visible;
-    }
-    
-    /* Overlay when nav is open */
-    body.nav-open::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-    }
-    
-    /* Mobile nav toggle button */
+    /* Theme toggle styling for mobile */
     .mobile-nav-toggle {
         display: flex;
         align-items: center;
