@@ -70,6 +70,24 @@
     --shadow-sm: 0 1px 3px rgba(26, 26, 24, 0.06);
     --shadow-md: 0 4px 12px rgba(26, 26, 24, 0.08);
     --shadow-lg: 0 8px 24px rgba(26, 26, 24, 0.12);
+    
+    /* Badge colors */
+    --badge-sketch-bg: rgba(106, 90, 205, 0.15);
+    --badge-sketch-color: #6A5ACD;
+    --badge-notebook-bg: rgba(60, 130, 100, 0.15);
+    --badge-notebook-color: #3C8264;
+    --badge-fiction-bg: rgba(180, 80, 100, 0.15);
+    --badge-fiction-color: #B45064;
+    --badge-dialogue-bg: rgba(75, 130, 120, 0.15);
+    --badge-dialogue-color: #4B8278;
+    --badge-reference-bg: rgba(70, 130, 180, 0.15);
+    --badge-reference-color: #4682B4;
+    --badge-verse-bg: rgba(138, 43, 226, 0.15);
+    --badge-verse-color: #8A2BE2;
+    --badge-note-bg: rgba(70, 130, 180, 0.15);
+    --badge-note-color: #4682B4;
+    --badge-technical-bg: rgba(60, 60, 60, 0.1);
+    --badge-technical-color: #505050;
 }
 
 [data-theme="dark"] {
@@ -93,6 +111,45 @@
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    
+    /* Badge colors - dark mode */
+    --badge-sketch-bg: rgba(147, 130, 230, 0.2);
+    --badge-sketch-color: #9382E6;
+    --badge-notebook-bg: rgba(80, 160, 120, 0.2);
+    --badge-notebook-color: #50A078;
+    --badge-fiction-bg: rgba(200, 100, 120, 0.2);
+    --badge-fiction-color: #C86478;
+    --badge-dialogue-bg: rgba(95, 160, 145, 0.2);
+    --badge-dialogue-color: #5FA091;
+    --badge-reference-bg: rgba(100, 160, 210, 0.2);
+    --badge-reference-color: #64A0D2;
+    --badge-verse-bg: rgba(168, 93, 255, 0.2);
+    --badge-verse-color: #A85DFF;
+    --badge-note-bg: rgba(100, 160, 210, 0.2);
+    --badge-note-color: #64A0D2;
+    --badge-technical-bg: rgba(150, 150, 150, 0.15);
+    --badge-technical-color: #A0A0A0;
+}
+
+/* ============================================
+   DARK MODE COMPONENT OVERRIDES
+   Non-variable overrides consolidated here
+   ============================================ */
+
+[data-theme="dark"] body::before {
+    opacity: 0.015;
+}
+
+[data-theme="dark"] .sun {
+    display: none;
+}
+
+[data-theme="dark"] .topic-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .definitions-sort select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B8B8B2' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
 /* ============================================
@@ -321,10 +378,6 @@ body::before {
     opacity: 0.02;
     pointer-events: none;
     z-index: 0;
-}
-
-[data-theme="dark"] body::before {
-    opacity: 0.015;
 }
 
 /* ============================================
@@ -638,10 +691,6 @@ blockquote {
     z-index: 1;
 }
 
-[data-theme="dark"] .sun {
-    display: none;
-}
-
 [data-theme="light"] .moon,
 :root:not([data-theme]) .moon {
     display: none;
@@ -887,10 +936,6 @@ details.collapse[open] summary::before {
     transform: scaleX(1);
 }
 
-[data-theme="dark"] .topic-card:hover {
-    box-shadow: var(--shadow-lg);
-}
-
 .topic-card h3 {
     margin-top: 0;
     margin-bottom: 0.75rem;
@@ -1039,10 +1084,6 @@ a.definition-link:visited {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A4A45' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
-}
-
-[data-theme="dark"] .definitions-sort select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B8B8B2' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
 .definitions-stats {
@@ -1936,6 +1977,20 @@ a.definition-link:visited {
         font-size: 0.85rem;
         padding: 0.35rem 0;
     }
+    
+    /* Entry link stacks on small mobile */
+    .entry-link {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .entry-link .entry-date {
+        margin-left: 0;
+    }
+    
+    .toc-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============================================
@@ -2106,43 +2161,23 @@ a.definition-link:visited {
 }
 
 .badge-sketch {
-    background: rgba(106, 90, 205, 0.15);
-    color: #6A5ACD;
-}
-
-[data-theme="dark"] .badge-sketch {
-    background: rgba(147, 130, 230, 0.2);
-    color: #9382E6;
+    background: var(--badge-sketch-bg);
+    color: var(--badge-sketch-color);
 }
 
 .badge-notebook {
-    background: rgba(60, 130, 100, 0.15);
-    color: #3C8264;
-}
-
-[data-theme="dark"] .badge-notebook {
-    background: rgba(80, 160, 120, 0.2);
-    color: #50A078;
+    background: var(--badge-notebook-bg);
+    color: var(--badge-notebook-color);
 }
 
 .badge-fiction {
-    background: rgba(180, 80, 100, 0.15);
-    color: #B45064;
-}
-
-[data-theme="dark"] .badge-fiction {
-    background: rgba(200, 100, 120, 0.2);
-    color: #C86478;
+    background: var(--badge-fiction-bg);
+    color: var(--badge-fiction-color);
 }
 
 .badge-dialogue {
-    background: rgba(75, 130, 120, 0.15);
-    color: #4B8278;
-}
-
-[data-theme="dark"] .badge-dialogue {
-    background: rgba(95, 160, 145, 0.2);
-    color: #5FA091;
+    background: var(--badge-dialogue-bg);
+    color: var(--badge-dialogue-color);
 }
 
 .badge-draft {
@@ -2151,13 +2186,8 @@ a.definition-link:visited {
 }
 
 .badge-reference {
-    background: rgba(70, 130, 180, 0.15);
-    color: #4682B4;
-}
-
-[data-theme="dark"] .badge-reference {
-    background: rgba(100, 160, 210, 0.2);
-    color: #64A0D2;
+    background: var(--badge-reference-bg);
+    color: var(--badge-reference-color);
 }
 
 .badge-legend {
@@ -2450,33 +2480,18 @@ kbd {
 
 /* Badge variants for verse and note */
 .badge-verse {
-    background: rgba(138, 43, 226, 0.15);
-    color: #8A2BE2;
-}
-
-[data-theme="dark"] .badge-verse {
-    background: rgba(168, 93, 255, 0.2);
-    color: #A85DFF;
+    background: var(--badge-verse-bg);
+    color: var(--badge-verse-color);
 }
 
 .badge-note {
-    background: rgba(70, 130, 180, 0.15);
-    color: #4682B4;
-}
-
-[data-theme="dark"] .badge-note {
-    background: rgba(100, 160, 210, 0.2);
-    color: #64A0D2;
+    background: var(--badge-note-bg);
+    color: var(--badge-note-color);
 }
 
 .badge-technical {
-    background: rgba(60, 60, 60, 0.1);
-    color: #505050;
-}
-
-[data-theme="dark"] .badge-technical {
-    background: rgba(150, 150, 150, 0.15);
-    color: #A0A0A0;
+    background: var(--badge-technical-bg);
+    color: var(--badge-technical-color);
 }
 
 /* See also section */
@@ -2511,20 +2526,4 @@ kbd {
 
 .entry-footer .last-updated {
     margin: 0;
-}
-
-/* Mobile adjustments for entry-link */
-@media (max-width: 600px) {
-    .entry-link {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .entry-link .entry-date {
-        margin-left: 0;
-    }
-    
-    .toc-grid {
-        grid-template-columns: 1fr;
-    }
 }
