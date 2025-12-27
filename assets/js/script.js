@@ -609,6 +609,9 @@
         init() {
             const tocContainer = document.querySelector('.toc');
             if (!tocContainer) return;
+            
+            // Skip if TOC already has content (manually created)
+            if (tocContainer.querySelector('ul')) return;
 
             const headings = document.querySelectorAll('.entry-content h2, .entry-content h3');
             if (headings.length < 3) {

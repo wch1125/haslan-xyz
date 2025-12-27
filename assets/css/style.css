@@ -1818,6 +1818,26 @@ a.definition-link:visited {
         padding: 0.5rem 1.5rem;
     }
     
+    /* Sidenav collapsed state for mobile */
+    .sidenav.collapsed {
+        transform: translateX(-100%);
+        visibility: hidden;
+    }
+    
+    .sidenav.mobile-open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+    
+    /* Overlay when nav is open */
+    body.nav-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    
     /* Mobile nav toggle button */
     .mobile-nav-toggle {
         display: flex;
