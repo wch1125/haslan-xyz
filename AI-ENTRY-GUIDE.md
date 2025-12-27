@@ -1,297 +1,181 @@
-# AI-Assisted Entry Generation Guide
+# AI Entry Guide for H. Aslan Wiki
 
-*For ChatGPT, Claude, or any LLM helping create content for haslan.xyz*
+*Instructions for Claude instances working on haslan.xyz*
+
+## Quick Start
+
+You're helping maintain a personal wiki. The owner (Will) writes essays on consciousness, institutional analysis, and other topics. Your job is to help with writing, editing, and converting essays to the site's HTML format.
+
+## Workflow Options
+
+### Option 1: Markdown-First (Preferred)
+
+Write essays in markdown with YAML front matter, then convert using `build_essay.py`:
+
+```bash
+python build_essay.py essay-name.md
+# Outputs to pages/writing/essay-name.html
+```
+
+### Option 2: Direct HTML (Legacy)
+
+Generate HTML directly matching the template structure. Use this only if the markdown converter doesn't support a needed feature.
 
 ---
 
-## About This Wiki
+## Markdown Format
 
-**haslan.xyz** is a personal wiki written under the pseudonym **H. Aslan**. It uses:
+### Front Matter
 
-- **Defined Terms** — Capitalized terms that link to a glossary with hover previews
-- **Sidenotes** — Tufte-style marginal notes for tangential information
-- **Collapsible sections** — Progressive disclosure for detailed content
-- **Evergreen pages** — Content that evolves rather than chronological posts
+```yaml
+---
+title: The Title of the Essay
+date: 2025-12-27
+type: sketch  # essay | sketch | notebook | fiction | draft
+abstract: >
+  A brief description. Can include [[definition links]].
+  Keep under 200 words.
+claims_not_making:
+  - First disclaimer
+  - Second disclaimer
+update_triggers:
+  - What would change my mind
+  - Another condition
+---
+```
 
-The voice is: **precise, unsentimental, not performative**. Avoid absolute claims unless explicitly warranted. Prefer clarity over cleverness.
+### Content Types
+
+| Type | Badge | Use For |
+|------|-------|---------|
+| `essay` | Essay | Argued and structured pieces |
+| `sketch` | Sketch | Speculative, exploratory |
+| `notebook` | Notebook | Working notes, rough |
+| `fiction` | Fiction | Creative work |
+| `draft` | Draft | Unfinished, WIP |
+
+### Special Syntax
+
+**Definition Links:**
+```markdown
+[[Conductor]]                -> links to definitions.html#conductor
+[[conductor|the witness]]    -> displays "the witness", links to #conductor
+```
+
+**Standard Markdown:**
+- Headers: `## Section Title` (h2 creates sections with auto-IDs)
+- Bold: `**text**`
+- Italic: `*text*`
+- Code: `` `inline` `` or fenced blocks
+- Lists: `-` or `1.`
+- Blockquotes: `>`
+- Links: `[text](url)`
 
 ---
 
-## Universal Prompt: Generate Entry + Definitions
-
-Copy and paste this prompt at the end of any productive conversation to generate wiki-ready content:
-
----
-
-### THE PROMPT
+## Site Structure
 
 ```
-You are helping me update my personal wiki (haslan.xyz). Use ONLY what we discussed in this chat as source material. Do not invent biographical facts, events, or claims. If something is uncertain, flag it as an assumption and write around it.
+haslan.xyz/
+├── index.html                 # Homepage
+├── build_essay.py             # Markdown converter
+├── wiki-manager.py            # Flask admin tool
+├── assets/
+│   ├── css/style.css
+│   └── js/script.js
+└── pages/
+    ├── definitions.html       # Glossary (add new terms here)
+    ├── creative-writing.html  # Essay index (add cards here)
+    ├── quotes.html
+    └── writing/
+        └── [essays].html      # Individual essays
+```
 
-**Step 0: Pick an output format**
+## When Adding a New Essay
 
-If I did not explicitly specify a preferred output format in my message, reply with only:
+1. **Create the essay** in markdown format
+2. **Convert to HTML**: `python build_essay.py essay.md`
+3. **Add to creative-writing.html**: Insert a card in the appropriate section
+4. **Add any new definitions** to definitions.html
+5. **Commit**: `git add . && git commit -m "Add: Essay Title" && git push`
 
-> "Which output format do you want: **A** (copy/paste sections) or **B** (structured fields)?"
-
-Do not generate the entry until I answer.
-
-If I specified a format (A or B), proceed directly.
-
----
-
-## Output Formats
-
-### Format A: Copy/paste sections
-
-Return your answer in exactly these sections, in this order:
-
-**A) Page metadata**
-- Title:
-- Proposed filename/slug: (no extension)
-- One-sentence description: (for meta / homepage card)
-- Abstract: (2–4 sentences)
-
-**B) Page content (HTML-only)**
-
-Write the page content as HTML blocks that can be pasted into the wiki-manager "Add Page" content field or into an HTML template.
-
-Rules:
-- Use `<section>` blocks with ids
-- Use `<h2>` headings
-- Use `<p>`, `<ul>`, `<li>`, `<details class="collapse">` and `<summary>` where appropriate
-- Include 2–5 sidenotes in this exact pattern:
+## Card Format for creative-writing.html
 
 ```html
-<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">…</span></span>
-```
-
-- When you use a Defined Term, wrap it as a link like:
-
-```html
-<a href="definitions.html#slug" class="definition-link" data-term="Term" data-definition="Short definition">Term</a>
-```
-
-(Choose a slug that matches the definition's id.)
-
-**C) Definitions to add (wiki-manager ready)**
-
-For each definition, output in this exact mini-template (repeat per term):
-
-```
-Term:
-Definition: (1–3 paragraphs; separate paragraphs with a blank line)
-Related Terms: (comma-separated term names; you may use Term|note if it clarifies the relationship)
-```
-
-Rules:
-- Definitions must match the voice: precise, unsentimental, not performative
-- Avoid absolute claims ("always," "never") unless explicitly discussed
-- Prefer "Not X; rather Y" clarifications when useful
-
-**D) Cross-link map**
-- Bullet list of how the definitions relate (A → B → C)
-- A short list of where in the page each term should be linked (by section id)
-
-**E) Edits checklist**
-- 5–10 bullets of final checks (tone consistency, claim hygiene, link slugs, etc.)
-
----
-
-### Format B: Structured fields (pasteable object)
-
-Return a single code block containing an object with exactly these keys:
-
-```javascript
-{
-  "page": {
-    "title": "string",
-    "slug": "string, no extension",
-    "description": "string, one sentence",
-    "abstract": "string, 2–4 sentences",
-    "content_html": "string: HTML only; same rules as Format A",
-    "suggest_add_to_home": boolean,
-    "home_card_blurb": "string; can be empty"
-  },
-  "definitions": [
-    {
-      "term": "string",
-      "id_slug": "string",
-      "definition_paragraphs": ["array of strings; 1–3 items"],
-      "related_terms": ["array of strings; may include Term|note"],
-      "short_definition": "string; 8–20 words, for hover previews"
-    }
-  ],
-  "crosslink_map": {
-    "edges": ["array of strings like 'A -> B'"],
-    "page_links": [
-      { "section_id": "intro", "terms": ["Term1", "Term2"] }
-    ]
-  },
-  "final_checks": ["array of strings"]
-}
-```
-
-Rules for Format B:
-- `content_html` must include the same sidenote pattern and definition-link pattern
-- Do not include any keys beyond those listed
-- Do not include comments
-
----
-
-## Content Guidance
-
-- Keep the entry tight: aim for **800–1500 words**
-- Use specific examples from our conversation, but avoid names unless necessary
-- Make the argument legible without preaching
-- Create **0–12 definitions**: only add terms that genuinely do work in the entry
-
----
-
-**Now generate a new haslan.xyz entry and any supporting definitions based on this chat.**
-```
-
----
-
-## HTML Patterns Reference
-
-### Sidenote
-```html
-<span class="sidenote">
-  <span class="sidenote-number"></span>
-  <span class="sidenote-content">Your marginal note here.</span>
-</span>
-```
-
-### Definition Link
-```html
-<a href="definitions.html#slug-here" class="definition-link" 
-   data-term="Term Name" 
-   data-definition="8-20 word definition for hover preview">Term Name</a>
-```
-
-### Collapsible Section
-```html
-<details class="collapse">
-  <summary>Click to expand</summary>
-  <div class="collapse-content">
-    <p>Hidden content here.</p>
-  </div>
-</details>
-```
-
-### Section with ID
-```html
-<section id="section-name">
-  <h2>Section Title</h2>
-  <p>Content...</p>
-</section>
-```
-
-### Dropcap (first paragraph of page)
-```html
-<p><span class="dropcap">T</span>he rest of the first sentence...</p>
-```
-
-### Abstract Block
-```html
-<div class="abstract">
-  <p><span class="abstract-label">Abstract:</span> Your 2-4 sentence summary here.</p>
+<div class="writing-card" data-category="sketch">
+    <h3><a href="writing/essay-filename.html">Essay Title</a></h3>
+    <div class="writing-meta">
+        <span class="content-badge badge-sketch">Sketch</span>
+        <time datetime="2025-12-27">27 December 2025</time>
+    </div>
+    <p>One-sentence description of the essay.</p>
 </div>
 ```
 
----
-
-## Definition Entry Template
-
-When adding to `definitions.html`, use this structure:
+## Definition Entry Format
 
 ```html
-<div class="definition-entry" id="term-slug">
-  <h3><span class="definition-term">Term Name</span></h3>
-  <div class="definition-metadata">
-    <span class="definition-letter">T</span>
-    <span class="definition-date">Added: Month Year</span>
-  </div>
-  <div class="definition-content">
-    <p>First paragraph of definition.</p>
-    <p>Second paragraph if needed.</p>
-    
-    <details class="collapse">
-      <summary>Related Concepts</summary>
-      <div class="collapse-content">
-        <ul>
-          <li><a href="#related-term">Related Term</a> (relationship note)</li>
-        </ul>
-      </div>
-    </details>
-  </div>
+<div class="definition-entry" id="term-id">
+    <h3><span class="definition-term">Term Name</span></h3>
+    <div class="definition-metadata">
+        <span class="definition-letter">T</span>
+        <span class="definition-date">Added: December 2025</span>
+    </div>
+    <div class="definition-content">
+        <p>Definition text. Can reference other <a href="#other-term" class="definition-link">Defined Terms</a>.</p>
+    </div>
 </div>
 ```
 
----
+## Style Notes
 
-## Voice Guidelines
+- **Dropcap**: First paragraph after h2 gets dropcap styling via CSS
+- **Sidenotes**: Use sparingly; work on desktop, collapse on mobile
+- **Collapsibles**: Good for objections, tangents, detailed examples
+- **Definition links**: Use for key terms; don't overlink
 
-### Do
-- Be precise and specific
-- Acknowledge uncertainty ("often," "tends to," "in many cases")
-- Use "Not X; rather Y" to clarify distinctions
-- Ground claims in observable patterns
-- Write as if explaining to a curious, intelligent reader
+## Content Guidelines
 
-### Don't
-- Make absolute claims without warrant
-- Preach or moralize
-- Perform authenticity (just be direct)
-- Invent biographical details
-- Over-explain or pad for length
+The wiki voice is:
+- First-person but not confessional
+- Intellectually honest (epistemic humility)
+- Shows working (acknowledges uncertainty)
+- References sources when building on others' work
 
----
+Each essay should have:
+- Clear abstract summarizing the argument
+- "What this is not claiming" section (prevents misreading)
+- "What would update this" section (shows intellectual honesty)
 
-## Existing Defined Terms
+## Files You'll Commonly Edit
 
-Before creating new definitions, check if these existing terms cover your concept:
+| File | When |
+|------|------|
+| `pages/writing/*.html` | New essays |
+| `pages/creative-writing.html` | Adding essay cards |
+| `pages/definitions.html` | New defined terms |
+| `pages/quotes.html` | New quotes |
 
-- Algorithmic Mediation
-- Authenticity
-- Canonical Self
-- Conformity
-- Context Collapse
-- Empathy
-- Epistemic Commons
-- Epistemic Divergence
-- Integrity
-- Locus of Verifiable Truth
-- Machine Legibility
-- Narrative Drift
-- Narrative Sovereignty
-- Personal Domain
-- Primary Artifact
-- Provenance
-- Public Narrative
-- Reality Lens
-- Reputation Score
-- Self-Awareness
-- Shadow Profile
+## Common Tasks
 
-If a term already exists, link to it rather than redefining it.
+**"Convert this essay to HTML"**
+→ Use build_essay.py or generate HTML matching template
+
+**"Add this essay to the site"**
+→ Create HTML + add card to creative-writing.html + commit
+
+**"Add a new definition"**
+→ Add entry to definitions.html in alphabetical position
+
+**"Review/edit existing essay"**
+→ Edit the HTML directly, maintain structure
 
 ---
 
-## After Generation
+## Questions?
 
-1. Review the output for tone consistency
-2. Verify all definition slugs match their `id` attributes
-3. Check that `data-definition` attributes are 8-20 words
-4. Test sidenote formatting
-5. Add the page via wiki-manager or direct HTML
-6. Add definitions to `definitions.html`
-7. Commit and push:
-   ```bash
-   git add . && git commit -m "Add: [page title]" && git push
-   ```
-
----
-
-*"Not a tame lion."*
+If unclear about site conventions, ask Will. When in doubt:
+- Match existing essay structure
+- Use sketch badge for exploratory work
+- Include epistemic disclaimers
+- Keep abstracts concise
