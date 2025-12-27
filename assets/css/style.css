@@ -1469,8 +1469,6 @@ a.definition-link:visited {
     transform: translateX(-4px);
 }
 
-/* Arrow is in HTML content, so just animate the whole link */
-
 /* ============================================
    CONTACT FORM
    ============================================ */
@@ -1560,13 +1558,162 @@ a.definition-link:visited {
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   TOPIC INDEX (Gwern-style) - NEW
+   ============================================ */
+
+/* Table of Contents for writing index */
+.toc {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+}
+
+.toc h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem 2rem;
+}
+
+.toc-list li {
+    margin: 0;
+}
+
+.toc-list a {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    border-bottom: none;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.toc-list a:hover {
+    color: var(--accent-gold);
+}
+
+.toc-count {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+}
+
+/* Section divider */
+.section-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2rem 0;
+}
+
+/* Topic sections */
+.topic-section {
+    margin: 3rem 0;
+}
+
+.topic-section h2 {
+    margin-top: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--accent-gold);
+    margin-bottom: 1.5rem;
+}
+
+/* Writing list (vertical stack for essays) */
+.writing-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Writing entry (individual essay in topic list) */
+.writing-entry {
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.writing-entry:hover {
+    border-left-color: var(--accent-gold);
+    background: var(--abstract-bg);
+}
+
+.entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.entry-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.entry-header h3 a {
+    color: var(--text-primary);
+    border-bottom: none;
+}
+
+.entry-header h3 a:hover {
+    color: var(--accent-gold);
+}
+
+.entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.entry-meta time {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+}
+
+.entry-abstract {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Page footer */
+.page-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.page-footer p {
+    margin: 0;
+    color: var(--text-tertiary);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - ENHANCED FOR MOBILE NAV
    ============================================ */
 
 @media (max-width: 1100px) {
     /* Hide the desktop sidenote-content positioning (JS handles mobile conversion) */
     .sidenote-content {
-        /* Allow JS to control visibility instead of hiding completely */
         position: static;
         display: none;
     }
@@ -1591,17 +1738,135 @@ a.definition-link:visited {
         grid-template-columns: 1fr;
     }
     
+    /* MOBILE NAV - Collapsible hamburger style */
     #sidenav {
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
         width: 100%;
         height: auto;
+        max-height: 100vh;
+        overflow-y: auto;
         border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        z-index: 1000;
+        padding: 0;
+        transform: translateY(-100%);
+        transition: transform var(--transition-base);
+    }
+    
+    #sidenav.open {
+        transform: translateY(0);
+    }
+    
+    /* Mobile nav header - always visible */
+    .nav-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .nav-header h1 {
+        font-size: 1.25rem;
+        margin: 0;
+    }
+    
+    .tagline {
+        display: none;
+    }
+    
+    /* Nav sections - collapsible on mobile */
+    .nav-section {
+        padding: 1rem;
+        margin-bottom: 0;
         border-bottom: 1px solid var(--border-color);
     }
     
+    .nav-section:last-of-type {
+        border-bottom: none;
+    }
+    
+    .nav-section h2 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .nav-section ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+    }
+    
+    .nav-section li {
+        margin: 0;
+    }
+    
+    .theme-toggle {
+        padding: 1rem;
+        margin: 0;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    #theme-toggle-btn {
+        width: auto;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    /* Mobile nav toggle button */
+    .mobile-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        width: 56px;
+        height: 56px;
+        background: var(--accent-gold);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 1001;
+        box-shadow: var(--shadow-lg);
+        transition: all var(--transition-fast);
+    }
+    
+    .mobile-nav-toggle:hover {
+        transform: scale(1.05);
+    }
+    
+    .mobile-nav-toggle.open {
+        background: var(--text-primary);
+    }
+    
+    .mobile-nav-toggle .hamburger {
+        display: block;
+    }
+    
+    .mobile-nav-toggle .close {
+        display: none;
+    }
+    
+    .mobile-nav-toggle.open .hamburger {
+        display: none;
+    }
+    
+    .mobile-nav-toggle.open .close {
+        display: block;
+    }
+    
+    /* Content adjustments for mobile */
     #content {
         margin-left: 0;
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1rem 5rem;
         min-width: auto;
     }
     
@@ -1611,6 +1876,18 @@ a.definition-link:visited {
     
     .loading-screen {
         padding: 1rem;
+    }
+    
+    /* TOC responsive */
+    .toc-list {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Entry header stacks on mobile */
+    .entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }
 
@@ -1626,6 +1903,16 @@ a.definition-link:visited {
     .dropcap {
         font-size: 3em;
     }
+    
+    /* Even more compact mobile nav */
+    .nav-section ul {
+        gap: 0.25rem 0.75rem;
+    }
+    
+    .nav-section a {
+        font-size: 0.85rem;
+        padding: 0.35rem 0;
+    }
 }
 
 /* ============================================
@@ -1637,7 +1924,8 @@ a.definition-link:visited {
     #sidenav,
     .theme-toggle,
     .back-link,
-    .reading-progress {
+    .reading-progress,
+    .mobile-nav-toggle {
         display: none !important;
     }
     
@@ -1913,7 +2201,8 @@ a.definition-link:visited {
 }
 
 /* Writing card updates */
-.writing-metadata {
+.writing-metadata,
+.writing-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
@@ -2034,4 +2323,175 @@ kbd {
     padding: 0.15em 0.4em;
     font-family: var(--font-mono);
     font-size: 0.85em;
+}
+
+/* ============================================
+   TOPIC INDEX - Entry Link Pattern
+   ============================================ */
+
+.entry-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    text-decoration: none;
+    border-bottom: none;
+    margin-bottom: 0.5rem;
+}
+
+.entry-link:hover {
+    border-bottom: none;
+}
+
+.entry-link .entry-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color var(--transition-fast);
+}
+
+.entry-link:hover .entry-title {
+    color: var(--accent-gold);
+}
+
+.entry-link .entry-date {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+
+.entry-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Topic description text */
+.topic-description {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+/* TOC Grid for index pages */
+.toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.toc-grid li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.toc-grid .count {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+}
+
+/* Index-specific TOC styling */
+.toc-index {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 6px;
+    margin: 2rem 0;
+}
+
+.toc-index h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Badge variants for verse and note */
+.badge-verse {
+    background: rgba(138, 43, 226, 0.15);
+    color: #8A2BE2;
+}
+
+[data-theme="dark"] .badge-verse {
+    background: rgba(168, 93, 255, 0.2);
+    color: #A85DFF;
+}
+
+.badge-note {
+    background: rgba(70, 130, 180, 0.15);
+    color: #4682B4;
+}
+
+[data-theme="dark"] .badge-note {
+    background: rgba(100, 160, 210, 0.2);
+    color: #64A0D2;
+}
+
+.badge-technical {
+    background: rgba(60, 60, 60, 0.1);
+    color: #505050;
+}
+
+[data-theme="dark"] .badge-technical {
+    background: rgba(150, 150, 150, 0.15);
+    color: #A0A0A0;
+}
+
+/* See also section */
+.see-also-list {
+    list-style: none;
+    padding: 0;
+}
+
+.see-also-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.see-also-list li:last-child {
+    border-bottom: none;
+}
+
+/* Writing list item without list bullet */
+.writing-list {
+    list-style: none;
+    padding: 0;
+}
+
+/* Entry footer */
+.entry-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.entry-footer .last-updated {
+    margin: 0;
+}
+
+/* Mobile adjustments for entry-link */
+@media (max-width: 600px) {
+    .entry-link {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .entry-link .entry-date {
+        margin-left: 0;
+    }
+    
+    .toc-grid {
+        grid-template-columns: 1fr;
+    }
 }

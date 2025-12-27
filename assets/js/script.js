@@ -1,1288 +1,824 @@
-// ============================================
-// H. ASLAN WIKI - ENHANCED JAVASCRIPT
-// "Not a tame lion."
-// Premium interactions and subtle lion motifs
-// ============================================
+/* ============================================
+   H. ASLAN WIKI - ENHANCED JAVASCRIPT
+   "Not a tame lion."
+   ============================================ */
 
 (function() {
     'use strict';
 
-    // ============================================
-    // LOADING SCREEN (Conditional)
-    // Only shows on first visit per session
-    // Respects prefers-reduced-motion
-    // ============================================
-    
-    const LoadingScreen = {
+    /* ============================================
+       MOBILE NAV MODULE
+       Collapsible hamburger menu for mobile
+       ============================================ */
+    const MobileNav = {
+        sidenav: null,
+        toggleBtn: null,
+        isOpen: false,
+
         init() {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (!loadingScreen) return;
-            
-            // Check if user prefers reduced motion
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            
-            // Check if already shown this session
-            const hasSeenLoading = sessionStorage.getItem('wiki-loading-seen');
-            
-            // Skip loading screen if reduced motion or already seen
-            if (prefersReducedMotion || hasSeenLoading) {
-                loadingScreen.classList.add('hidden');
-                loadingScreen.style.display = 'none';
-                return;
-            }
-            
-            // Mark as seen for this session
-            sessionStorage.setItem('wiki-loading-seen', 'true');
-            
-            // Add skip button functionality
-            const skipBtn = loadingScreen.querySelector('.loading-skip');
-            if (skipBtn) {
-                skipBtn.addEventListener('click', () => this.hide());
-            }
-            
-            // Also allow clicking anywhere or pressing any key to skip
-            loadingScreen.addEventListener('click', () => this.hide());
-            document.addEventListener('keydown', () => this.hide(), { once: true });
-            
-            // Auto-hide after animation completes
-            setTimeout(() => this.hide(), 1200);
+            this.sidenav = document.getElementById('sidenav');
+            if (!this.sidenav) return;
+
+            this.createToggleButton();
+            this.bindEvents();
+            this.checkInitialState();
         },
-        
-        hide() {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
-                loadingScreen.classList.add('hidden');
+
+        createToggleButton() {
+            this.toggleBtn = document.createElement('button');
+            this.toggleBtn.className = 'mobile-nav-toggle';
+            this.toggleBtn.setAttribute('aria-label', 'Toggle navigation menu');
+            this.toggleBtn.setAttribute('aria-expanded', 'false');
+            this.toggleBtn.innerHTML = `
+                <span class="hamburger">☰</span>
+                <span class="close">✕</span>
+            `;
+            document.body.appendChild(this.toggleBtn);
+        },
+
+        bindEvents() {
+            this.toggleBtn.addEventListener('click', () => this.toggle());
+            
+            // Close on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    this.close();
+                }
+            });
+
+            // Close when clicking a nav link (on mobile)
+            this.sidenav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 900) {
+                        this.close();
+                    }
+                });
+            });
+
+            // Close when clicking outside (on overlay)
+            document.addEventListener('click', (e) => {
+                if (this.isOpen && 
+                    !this.sidenav.contains(e.target) && 
+                    !this.toggleBtn.contains(e.target)) {
+                    this.close();
+                }
+            });
+        },
+
+        checkInitialState() {
+            // Start closed on mobile
+            if (window.innerWidth <= 900) {
+                this.sidenav.classList.add('collapsed');
             }
+        },
+
+        toggle() {
+            this.isOpen ? this.close() : this.open();
+        },
+
+        open() {
+            this.isOpen = true;
+            this.sidenav.classList.remove('collapsed');
+            this.sidenav.classList.add('mobile-open');
+            this.toggleBtn.classList.add('open');
+            this.toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('nav-open');
+        },
+
+        close() {
+            this.isOpen = false;
+            this.sidenav.classList.add('collapsed');
+            this.sidenav.classList.remove('mobile-open');
+            this.toggleBtn.classList.remove('open');
+            this.toggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('nav-open');
         }
     };
 
-    // ============================================
-    // READING PROGRESS BAR
-    // ============================================
-    
-    const ReadingProgress = {
-        progressBar: null,
-        progressContainer: null,
-        
+    /* ============================================
+       LOADING SCREEN MODULE
+       Shows lion animation once per session
+       ============================================ */
+    const LoadingScreen = {
         init() {
-            // Create progress bar elements
-            this.progressContainer = document.createElement('div');
-            this.progressContainer.className = 'reading-progress';
+            const loader = document.querySelector('.loading-screen');
+            if (!loader) return;
+
+            // Skip if already shown this session or user prefers reduced motion
+            const hasShown = sessionStorage.getItem('loadingShown');
+            const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (hasShown || prefersReduced) {
+                loader.remove();
+                return;
+            }
+
+            // Show loading screen
+            loader.classList.add('active');
             
-            this.progressBar = document.createElement('div');
-            this.progressBar.className = 'reading-progress-bar';
-            
-            this.progressContainer.appendChild(this.progressBar);
-            document.body.appendChild(this.progressContainer);
-            
-            // Throttled scroll handler
-            let ticking = false;
-            window.addEventListener('scroll', () => {
-                if (!ticking) {
-                    requestAnimationFrame(() => {
-                        this.update();
-                        ticking = false;
-                    });
-                    ticking = true;
-                }
-            });
-            
-            this.update();
+            // Hide after animation completes
+            setTimeout(() => {
+                loader.classList.add('fade-out');
+                setTimeout(() => {
+                    loader.remove();
+                    sessionStorage.setItem('loadingShown', 'true');
+                }, 500);
+            }, 1800);
+        }
+    };
+
+    /* ============================================
+       READING PROGRESS MODULE
+       Progress bar at top of page
+       ============================================ */
+    const ReadingProgress = {
+        bar: null,
+        throttleTimer: null,
+
+        init() {
+            this.createBar();
+            this.bindEvents();
         },
-        
+
+        createBar() {
+            this.bar = document.createElement('div');
+            this.bar.className = 'reading-progress';
+            this.bar.setAttribute('role', 'progressbar');
+            this.bar.setAttribute('aria-label', 'Reading progress');
+            document.body.appendChild(this.bar);
+        },
+
+        bindEvents() {
+            window.addEventListener('scroll', () => this.throttledUpdate(), { passive: true });
+            window.addEventListener('resize', () => this.throttledUpdate(), { passive: true });
+        },
+
+        throttledUpdate() {
+            if (this.throttleTimer) return;
+            this.throttleTimer = setTimeout(() => {
+                this.update();
+                this.throttleTimer = null;
+            }, 16); // ~60fps
+        },
+
         update() {
             const scrollTop = window.scrollY;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
             
-            this.progressBar.style.width = `${progress}%`;
-            
-            // Show/hide based on scroll position
-            if (scrollTop > 100) {
-                this.progressContainer.classList.add('visible');
-            } else {
-                this.progressContainer.classList.remove('visible');
-            }
+            this.bar.style.width = `${Math.min(progress, 100)}%`;
+            this.bar.setAttribute('aria-valuenow', Math.round(progress));
         }
     };
 
-    // ============================================
-    // SCROLL REVEAL ANIMATIONS
-    // ============================================
-    
+    /* ============================================
+       SCROLL REVEAL MODULE
+       Progressive content reveal on scroll
+       ============================================ */
     const ScrollReveal = {
         init() {
-            // Respect reduced motion preference
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            if (!('IntersectionObserver' in window)) return;
-            
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('revealed');
-                    }
-                });
-            }, observerOptions);
-            
-            // Add reveal class to elements and observe
-            const revealSelectors = [
-                '.topic-card',
-                '.definition-entry',
-                '.quote-entry',
-                '.writing-card',
-                'section > h2',
-                '.abstract',
-                '.start-here-card'
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                },
+                { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+            );
+
+            // Target elements for reveal animation
+            const selectors = [
+                '.entry-content p',
+                '.entry-content h2',
+                '.entry-content h3',
+                '.entry-content blockquote',
+                '.topic-section',
+                '.writing-entry'
             ];
-            
-            document.querySelectorAll(revealSelectors.join(', ')).forEach(el => {
-                if (!el.classList.contains('reveal')) {
-                    el.classList.add('reveal');
-                }
+
+            document.querySelectorAll(selectors.join(', ')).forEach((el, index) => {
+                el.style.transitionDelay = `${Math.min(index * 50, 300)}ms`;
+                el.classList.add('reveal-target');
                 observer.observe(el);
-            });
-            
-            // Stagger animations for grids
-            document.querySelectorAll('.topic-grid, .start-here-grid').forEach(grid => {
-                grid.classList.add('reveal-stagger');
-                observer.observe(grid);
             });
         }
     };
 
-    // ============================================
-    // AUTO-ENHANCEMENT SYSTEM
-    // Definitions, dropcaps, and more
-    // ============================================
-    
+    /* ============================================
+       AUTO ENHANCE MODULE
+       Dropcaps, term linking, verse detection
+       ============================================ */
     const AutoEnhance = {
         definitions: {},
-        
+
         async init() {
             await this.loadDefinitions();
             this.applyDropcaps();
-            this.linkDefinitions();
-            this.enhanceWritingContent();
-            
-            // Re-attach popup listeners for newly created definition links
-            if (typeof LinkPopup !== 'undefined' && LinkPopup.attachDefinitionListeners) {
-                LinkPopup.attachDefinitionListeners();
-            }
+            this.autoLinkTerms();
+            this.detectVerseFormatting();
         },
-        
+
         async loadDefinitions() {
             try {
-                const currentPath = window.location.pathname;
-                let definitionsPath;
-                
-                if (currentPath.includes('/pages/writing/')) {
-                    definitionsPath = '../definitions.html';
-                } else if (currentPath.includes('/pages/')) {
-                    definitionsPath = 'definitions.html';
-                } else {
-                    definitionsPath = 'pages/definitions.html';
-                }
-                
-                const response = await fetch(definitionsPath);
+                const response = await fetch('/definitions.html');
                 if (!response.ok) return;
                 
                 const html = await response.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 
-                doc.querySelectorAll('.definition-entry').forEach(entry => {
-                    const termEl = entry.querySelector('.definition-term');
-                    const contentEl = entry.querySelector('.definition-content p');
-                    const id = entry.getAttribute('id');
-                    
-                    if (termEl && contentEl && id) {
-                        const term = termEl.textContent.trim();
-                        let preview = contentEl.textContent.trim();
-                        if (preview.length > 150) {
-                            preview = preview.substring(0, 147) + '...';
-                        }
-                        
-                        this.definitions[term.toLowerCase()] = {
-                            term: term,
-                            slug: id,
-                            preview: preview
+                // Extract terms from definition list
+                doc.querySelectorAll('dt').forEach(dt => {
+                    const term = dt.textContent.trim().toLowerCase();
+                    const dd = dt.nextElementSibling;
+                    if (dd && dd.tagName === 'DD') {
+                        this.definitions[term] = {
+                            term: dt.textContent.trim(),
+                            definition: dd.innerHTML
                         };
                     }
                 });
             } catch (e) {
-                console.log('Could not load definitions for auto-linking');
+                console.log('Definitions not loaded:', e);
             }
         },
-        
+
         applyDropcaps() {
-            const selectors = [
-                'section#introduction > p:first-of-type',
-                'section#intro > p:first-of-type',
-                '.writing-content > p:first-of-type',
-                'article > section:first-of-type > p:first-of-type'
-            ];
+            const firstParagraph = document.querySelector('.entry-content > p:first-of-type');
+            if (!firstParagraph) return;
+
+            const text = firstParagraph.innerHTML;
+            const firstChar = text.charAt(0);
             
-            selectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(p => {
-                    if (p.querySelector('.dropcap')) return;
-                    if (p.textContent.trim().length < 50) return;
-                    
-                    const text = p.innerHTML;
-                    const match = text.match(/^(\s*(?:<[^>]+>)*)([A-Za-z])/);
-                    if (match) {
-                        const before = match[1] || '';
-                        const letter = match[2];
-                        const after = text.substring(match[0].length);
-                        p.innerHTML = `${before}<span class="dropcap">${letter}</span>${after}`;
-                    }
-                });
-            });
-        },
-        
-        linkDefinitions() {
-            if (Object.keys(this.definitions).length === 0) return;
-            if (window.location.pathname.includes('definitions.html')) return;
-            
-            const currentPath = window.location.pathname;
-            let linkPrefix;
-            if (currentPath.includes('/pages/writing/')) {
-                linkPrefix = '../definitions.html';
-            } else if (currentPath.includes('/pages/')) {
-                linkPrefix = 'definitions.html';
-            } else {
-                linkPrefix = 'pages/definitions.html';
+            // Only apply to letters
+            if (/[A-Z]/.test(firstChar)) {
+                firstParagraph.innerHTML = 
+                    `<span class="dropcap">${firstChar}</span>${text.substring(1)}`;
             }
-            
-            const contentAreas = document.querySelectorAll(
-                'article p, article li, .writing-content, .abstract p, blockquote'
-            );
-            
-            contentAreas.forEach(el => {
-                if (el.closest('a') || el.closest('h1, h2, h3, h4')) return;
-                this.processTextNode(el, linkPrefix);
-            });
         },
-        
-        processTextNode(element, linkPrefix) {
+
+        autoLinkTerms() {
+            if (Object.keys(this.definitions).length === 0) return;
+
+            const content = document.querySelector('.entry-content');
+            if (!content) return;
+
+            // Walk through text nodes only
             const walker = document.createTreeWalker(
-                element,
+                content,
                 NodeFilter.SHOW_TEXT,
-                null,
-                false
+                {
+                    acceptNode: (node) => {
+                        // Skip if inside a link, heading, or code
+                        const parent = node.parentElement;
+                        if (!parent) return NodeFilter.FILTER_REJECT;
+                        const tagName = parent.tagName.toLowerCase();
+                        if (['a', 'h1', 'h2', 'h3', 'code', 'pre', 'script'].includes(tagName)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
             );
-            
-            const textNodes = [];
+
+            const nodesToReplace = [];
             let node;
             while (node = walker.nextNode()) {
-                if (node.parentElement.closest('a, .definition-link')) continue;
-                textNodes.push(node);
-            }
-            
-            textNodes.forEach(textNode => {
-                let html = textNode.textContent;
-                let modified = false;
-                
-                for (const [termLower, def] of Object.entries(this.definitions)) {
-                    const capitalizedTerm = def.term;
-                    const regex = new RegExp(`\\b(${this.escapeRegex(capitalizedTerm)})\\b`, 'g');
-                    
-                    if (regex.test(html)) {
-                        modified = true;
-                        html = html.replace(regex, 
-                            `<a href="${linkPrefix}#${def.slug}" class="definition-link" data-term="${def.term}" data-definition="${this.escapeHtml(def.preview)}">$1</a>`
-                        );
+                for (const [termLower, termData] of Object.entries(this.definitions)) {
+                    const regex = new RegExp(`\\b(${termData.term})\\b`, 'gi');
+                    if (regex.test(node.textContent)) {
+                        nodesToReplace.push({ node, termLower, termData, regex });
+                        break; // One term per text node to avoid conflicts
                     }
                 }
-                
-                if (modified) {
-                    const span = document.createElement('span');
-                    span.innerHTML = html;
-                    textNode.parentNode.replaceChild(span, textNode);
-                }
+            }
+
+            // Replace nodes with linked versions
+            nodesToReplace.forEach(({ node, termData, regex }) => {
+                const span = document.createElement('span');
+                span.innerHTML = node.textContent.replace(
+                    regex,
+                    `<a href="/definitions.html#${termData.term.toLowerCase().replace(/\s+/g, '-')}" class="term-link" data-term="${termData.term}">$1</a>`
+                );
+                node.parentNode.replaceChild(span, node);
             });
         },
-        
-        escapeRegex(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        },
-        
-        escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML.replace(/"/g, '&quot;');
-        },
-        
-        enhanceWritingContent() {
-            document.querySelectorAll('.writing-content').forEach(content => {
-                const text = content.textContent;
-                const lines = text.split('\n').filter(l => l.trim());
-                const shortLines = lines.filter(l => l.trim().length < 60 && !l.trim().endsWith('.')); 
+
+        detectVerseFormatting() {
+            const content = document.querySelector('.entry-content');
+            if (!content) return;
+
+            // Find paragraphs that look like verse (short lines with line breaks)
+            content.querySelectorAll('p').forEach(p => {
+                const text = p.innerHTML;
+                const lines = text.split('<br>').filter(l => l.trim());
                 
-                if (shortLines.length > lines.length * 0.5) {
-                    content.classList.add('verse');
+                // Heuristic: if multiple short lines, treat as verse
+                if (lines.length >= 3 && lines.every(l => l.trim().length < 60)) {
+                    p.classList.add('verse');
                 }
             });
         }
     };
 
-    // ============================================
-    // DARK MODE TOGGLE
-    // ============================================
-    
+    /* ============================================
+       DARK MODE MODULE
+       Toggle with localStorage persistence
+       ============================================ */
     const DarkMode = {
+        toggle: null,
+        
         init() {
-            const themeToggle = document.getElementById('theme-toggle-btn');
-            const htmlElement = document.documentElement;
+            this.createToggle();
+            this.loadPreference();
+            this.bindEvents();
+        },
+
+        createToggle() {
+            this.toggle = document.createElement('button');
+            this.toggle.className = 'dark-mode-toggle';
+            this.toggle.setAttribute('aria-label', 'Toggle dark mode');
+            this.toggle.innerHTML = `
+                <span class="sun">☀️</span>
+                <span class="moon">🌙</span>
+            `;
             
-            if (!themeToggle) return;
-            
-            // Load saved theme or default to system preference
-            const savedTheme = localStorage.getItem('wiki-theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme) {
-                htmlElement.setAttribute('data-theme', savedTheme);
-            } else if (systemPrefersDark) {
-                htmlElement.setAttribute('data-theme', 'dark');
+            // Add to sidenav if exists, otherwise to body
+            const sidenav = document.getElementById('sidenav');
+            if (sidenav) {
+                const footer = sidenav.querySelector('.sidenav-footer') || sidenav;
+                footer.appendChild(this.toggle);
             } else {
-                htmlElement.setAttribute('data-theme', 'light');
+                document.body.appendChild(this.toggle);
             }
+        },
+
+        loadPreference() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             
-            themeToggle.addEventListener('click', () => {
-                const currentTheme = htmlElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                htmlElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('wiki-theme', newTheme);
-            });
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                this.updateToggle(true);
+            }
+        },
+
+        bindEvents() {
+            this.toggle.addEventListener('click', () => this.toggleTheme());
             
             // Listen for system preference changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (!localStorage.getItem('wiki-theme')) {
-                    htmlElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-                }
-            });
+            window.matchMedia('(prefers-color-scheme: dark)')
+                .addEventListener('change', (e) => {
+                    if (!localStorage.getItem('theme')) {
+                        this.setTheme(e.matches);
+                    }
+                });
+        },
+
+        toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            this.setTheme(!isDark);
+        },
+
+        setTheme(dark) {
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            this.updateToggle(dark);
+        },
+
+        updateToggle(isDark) {
+            this.toggle.classList.toggle('dark', isDark);
         }
     };
 
-    // ============================================
-    // ENHANCED LINK POPUP (with Mobile Support)
-    // ============================================
-    
+    /* ============================================
+       LINK POPUP MODULE
+       Definition previews on hover/tap
+       ============================================ */
     const LinkPopup = {
         popup: null,
-        timeout: null,
-        activeLink: null,
         isTouchDevice: false,
-        
+        hideTimeout: null,
+
         init() {
-            // Detect touch capability
-            this.isTouchDevice = ('ontouchstart' in window) || 
-                                 (navigator.maxTouchPoints > 0) ||
-                                 (navigator.msMaxTouchPoints > 0);
-            
+            this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             this.createPopup();
-            this.attachDefinitionListeners();
-            
-            // Close popup when tapping elsewhere on mobile
-            if (this.isTouchDevice) {
-                document.addEventListener('touchstart', (e) => {
-                    if (!e.target.closest('.link-popup') && !e.target.closest('.definition-link')) {
-                        this.hide();
-                        this.activeLink = null;
-                    }
-                });
-            }
+            this.bindEvents();
         },
-        
+
         createPopup() {
             this.popup = document.createElement('div');
             this.popup.className = 'link-popup';
-            this.popup.innerHTML = `
-                <div class="link-popup-title"></div>
-                <div class="link-popup-excerpt"></div>
-                <div class="link-popup-actions">
-                    <a class="link-popup-goto" href="#">Go to definition →</a>
-                    <button class="link-popup-close" aria-label="Close">✕</button>
-                </div>
-            `;
+            this.popup.setAttribute('role', 'tooltip');
+            this.popup.hidden = true;
             document.body.appendChild(this.popup);
-            
-            // Handle "Go to definition" click
-            this.popup.querySelector('.link-popup-goto').addEventListener('click', (e) => {
-                if (this.activeLink) {
-                    window.location.href = this.activeLink.href;
+        },
+
+        bindEvents() {
+            document.addEventListener('mouseover', (e) => {
+                if (this.isTouchDevice) return;
+                const link = e.target.closest('.term-link, a[data-preview]');
+                if (link) this.showForLink(link);
+            });
+
+            document.addEventListener('mouseout', (e) => {
+                if (this.isTouchDevice) return;
+                const link = e.target.closest('.term-link, a[data-preview]');
+                if (link) this.scheduleHide();
+            });
+
+            // Touch handling
+            document.addEventListener('touchstart', (e) => {
+                const link = e.target.closest('.term-link, a[data-preview]');
+                if (link) {
+                    e.preventDefault();
+                    this.toggleForLink(link);
+                } else if (!this.popup.contains(e.target)) {
+                    this.hide();
                 }
             });
-            
-            // Handle close button
-            this.popup.querySelector('.link-popup-close').addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.hide();
-                this.activeLink = null;
+
+            // Keep popup visible while hovering it
+            this.popup.addEventListener('mouseenter', () => {
+                clearTimeout(this.hideTimeout);
+            });
+
+            this.popup.addEventListener('mouseleave', () => {
+                this.scheduleHide();
             });
         },
-        
-        attachDefinitionListeners() {
-            document.querySelectorAll('a.definition-link').forEach(link => {
-                // Desktop: hover behavior
-                link.addEventListener('mouseenter', (e) => {
-                    if (!this.isTouchDevice) {
-                        this.show(e);
-                    }
-                });
-                link.addEventListener('mouseleave', () => {
-                    if (!this.isTouchDevice) {
-                        this.hide();
-                    }
-                });
-                
-                // Keyboard accessibility
-                link.addEventListener('focus', (e) => this.show(e));
-                link.addEventListener('blur', () => this.hide());
-                
-                // Mobile: tap behavior
-                link.addEventListener('click', (e) => {
-                    if (this.isTouchDevice) {
-                        // First tap: show popup, prevent navigation
-                        // Second tap on same link: navigate
-                        if (this.activeLink === link && this.popup.classList.contains('show')) {
-                            // Second tap - allow navigation
-                            return;
-                        }
-                        
-                        e.preventDefault();
-                        this.activeLink = link;
-                        this.show(e);
-                    }
-                });
-            });
-        },
-        
-        show(e) {
-            clearTimeout(this.timeout);
+
+        async showForLink(link) {
+            clearTimeout(this.hideTimeout);
             
-            const link = e.target.closest('.definition-link') || e.target;
             const term = link.dataset.term;
-            const definition = link.dataset.definition;
-            
-            if (!term || !definition) return;
-            
-            this.popup.querySelector('.link-popup-title').textContent = term;
-            this.popup.querySelector('.link-popup-excerpt').textContent = definition;
-            this.popup.querySelector('.link-popup-goto').href = link.href;
-            
-            // Position popup
-            const rect = link.getBoundingClientRect();
-            const popupHeight = this.isTouchDevice ? 160 : 120;
-            const spaceAbove = rect.top;
-            const spaceBelow = window.innerHeight - rect.bottom;
-            
-            let top, left;
-            
-            if (spaceBelow >= popupHeight || spaceBelow >= spaceAbove) {
-                top = rect.bottom + window.scrollY + 8;
+            let content = '';
+
+            if (term && AutoEnhance.definitions[term.toLowerCase()]) {
+                const def = AutoEnhance.definitions[term.toLowerCase()];
+                content = `<strong>${def.term}</strong><p>${def.definition}</p>`;
+            } else if (link.dataset.preview) {
+                content = link.dataset.preview;
             } else {
-                top = rect.top + window.scrollY - popupHeight - 8;
+                return; // No preview available
             }
-            
-            // On mobile, center the popup horizontally for better readability
-            if (this.isTouchDevice) {
-                const popupWidth = Math.min(window.innerWidth - 32, 400);
-                left = Math.max(16, (window.innerWidth - popupWidth) / 2);
-            } else {
-                left = Math.max(16, Math.min(
-                    rect.left + window.scrollX,
-                    window.innerWidth - 420
-                ));
-            }
-            
-            this.popup.style.top = `${top}px`;
-            this.popup.style.left = `${left}px`;
-            
-            // Show faster on mobile since user explicitly tapped
-            const delay = this.isTouchDevice ? 0 : 100;
-            this.timeout = setTimeout(() => {
-                this.popup.classList.add('show');
-            }, delay);
+
+            this.popup.innerHTML = content;
+            this.popup.hidden = false;
+            this.positionNear(link);
         },
-        
+
+        toggleForLink(link) {
+            if (!this.popup.hidden && this.popup.dataset.currentLink === link.href) {
+                this.hide();
+            } else {
+                this.popup.dataset.currentLink = link.href;
+                this.showForLink(link);
+            }
+        },
+
+        positionNear(element) {
+            const rect = element.getBoundingClientRect();
+            const popupRect = this.popup.getBoundingClientRect();
+            
+            let top = rect.bottom + 8;
+            let left = rect.left;
+
+            // Adjust if would go off screen
+            if (left + popupRect.width > window.innerWidth - 16) {
+                left = window.innerWidth - popupRect.width - 16;
+            }
+            if (top + popupRect.height > window.innerHeight - 16) {
+                top = rect.top - popupRect.height - 8;
+            }
+
+            this.popup.style.top = `${top + window.scrollY}px`;
+            this.popup.style.left = `${Math.max(16, left)}px`;
+        },
+
+        scheduleHide() {
+            this.hideTimeout = setTimeout(() => this.hide(), 200);
+        },
+
         hide() {
-            clearTimeout(this.timeout);
-            this.popup.classList.remove('show');
+            this.popup.hidden = true;
+            delete this.popup.dataset.currentLink;
         }
     };
 
-    // ============================================
-    // DESKTOP SIDENOTES
-    // Positions sidenotes in right margin on hover
-    // ============================================
-    
+    /* ============================================
+       DESKTOP SIDENOTES MODULE
+       Gwern-style marginal notes
+       ============================================ */
     const DesktopSidenotes = {
         init() {
-            // Only activate on wider screens
-            const mql = window.matchMedia('(min-width: 1101px)');
-            
-            if (mql.matches) {
-                this.setup();
-            }
-            
-            mql.addEventListener('change', (e) => {
-                if (e.matches) {
-                    this.setup();
-                } else {
-                    this.teardown();
-                }
-            });
-        },
-        
-        setup() {
-            document.querySelectorAll('.sidenote').forEach(sidenote => {
-                const content = sidenote.querySelector('.sidenote-content');
-                const number = sidenote.querySelector('.sidenote-number');
-                if (!content) return;
-                
-                // Show on hover/focus
-                const showSidenote = () => {
-                    this.positionSidenote(sidenote, content);
-                    content.classList.add('visible');
-                };
-                
-                const hideSidenote = () => {
-                    content.classList.remove('visible');
-                };
-                
-                sidenote.addEventListener('mouseenter', showSidenote);
-                sidenote.addEventListener('mouseleave', hideSidenote);
-                if (number) {
-                    number.addEventListener('focus', showSidenote);
-                    number.addEventListener('blur', hideSidenote);
-                }
-                
-                // Store handlers for cleanup
-                sidenote._desktopHandlers = { showSidenote, hideSidenote };
-            });
-        },
-        
-        teardown() {
-            document.querySelectorAll('.sidenote').forEach(sidenote => {
-                const content = sidenote.querySelector('.sidenote-content');
-                if (content) content.classList.remove('visible');
-                
-                if (sidenote._desktopHandlers) {
-                    sidenote.removeEventListener('mouseenter', sidenote._desktopHandlers.showSidenote);
-                    sidenote.removeEventListener('mouseleave', sidenote._desktopHandlers.hideSidenote);
-                    delete sidenote._desktopHandlers;
-                }
-            });
-        },
-        
-        positionSidenote(sidenote, content) {
-            const contentArea = document.getElementById('content');
-            if (!contentArea) return;
-            
-            // Get positions
-            const sidenoteRect = sidenote.getBoundingClientRect();
-            const contentRect = contentArea.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            
-            // Position sidenote in right margin
-            // Start at right edge of content area + small gap
-            let leftPos = contentRect.right + 16;
-            
-            // If not enough room on right, position relative to viewport
-            const sidenoteWidth = 240; // var(--sidenote-width)
-            if (leftPos + sidenoteWidth > viewportWidth - 16) {
-                leftPos = viewportWidth - sidenoteWidth - 16;
-            }
-            
-            // Vertical position: align with the sidenote reference
-            let topPos = sidenoteRect.top;
-            
-            // Keep within viewport bounds
-            const maxHeight = 300;
-            if (topPos + maxHeight > window.innerHeight - 16) {
-                topPos = window.innerHeight - maxHeight - 16;
-            }
-            if (topPos < 16) topPos = 16;
-            
-            content.style.left = `${leftPos}px`;
-            content.style.top = `${topPos}px`;
-        }
-    };
+            if (window.innerWidth < 1100) return;
 
-    // ============================================
-    // MOBILE SIDENOTES
-    // Converts sidenotes to expandable inline notes on mobile/tablet
-    // ============================================
-    
-    const MobileSidenotes = {
-        init() {
-            // Only activate on narrower screens where sidenotes don't fit
-            const mql = window.matchMedia('(max-width: 1100px)');
-            
-            if (mql.matches) {
-                this.convertToInline();
-            }
-            
-            // Handle orientation changes / resize
-            mql.addEventListener('change', (e) => {
-                if (e.matches) {
-                    this.convertToInline();
-                } else {
-                    this.revertToSidenotes();
+            this.positionSidenotes();
+            window.addEventListener('resize', () => this.handleResize());
+        },
+
+        positionSidenotes() {
+            const sidenotes = document.querySelectorAll('.sidenote');
+            const content = document.querySelector('.entry-content');
+            if (!content || sidenotes.length === 0) return;
+
+            const contentRect = content.getBoundingClientRect();
+            let lastBottom = 0;
+
+            sidenotes.forEach((note, index) => {
+                const ref = document.querySelector(`[data-sidenote="${index + 1}"]`);
+                if (!ref) return;
+
+                const refRect = ref.getBoundingClientRect();
+                let idealTop = refRect.top - contentRect.top;
+                
+                // Prevent overlap with previous sidenote
+                if (idealTop < lastBottom + 16) {
+                    idealTop = lastBottom + 16;
                 }
+
+                note.style.position = 'absolute';
+                note.style.top = `${idealTop}px`;
+                note.style.right = `-${260}px`;
+                note.style.width = '240px';
+
+                lastBottom = idealTop + note.offsetHeight;
             });
         },
-        
-        convertToInline() {
-            document.querySelectorAll('.sidenote').forEach((sidenote, index) => {
-                // Skip if already converted
-                if (sidenote.classList.contains('sidenote-mobile-converted')) return;
-                
-                const number = sidenote.querySelector('.sidenote-number');
-                const content = sidenote.querySelector('.sidenote-content');
-                
-                if (!content) return;
-                
-                // Mark as converted
-                sidenote.classList.add('sidenote-mobile-converted');
-                
-                // Create expandable inline note
-                const wrapper = document.createElement('span');
-                wrapper.className = 'sidenote-mobile-wrapper';
-                
-                const toggle = document.createElement('button');
-                toggle.className = 'sidenote-mobile-toggle';
-                toggle.setAttribute('aria-expanded', 'false');
-                toggle.setAttribute('aria-label', `Show note ${index + 1}`);
-                toggle.innerHTML = `<span class="sidenote-mobile-number">${index + 1}</span>`;
-                
-                const inlineContent = document.createElement('span');
-                inlineContent.className = 'sidenote-mobile-content';
-                inlineContent.innerHTML = content.innerHTML;
-                inlineContent.hidden = true;
-                
-                // Toggle behavior
-                toggle.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                    toggle.setAttribute('aria-expanded', !isExpanded);
-                    inlineContent.hidden = isExpanded;
-                    toggle.classList.toggle('active', !isExpanded);
+
+        handleResize() {
+            if (window.innerWidth >= 1100) {
+                this.positionSidenotes();
+            } else {
+                // Reset positioning for mobile
+                document.querySelectorAll('.sidenote').forEach(note => {
+                    note.style.position = '';
+                    note.style.top = '';
+                    note.style.right = '';
+                    note.style.width = '';
                 });
-                
-                wrapper.appendChild(toggle);
-                wrapper.appendChild(inlineContent);
-                
-                // Hide original sidenote elements
-                if (number) number.style.display = 'none';
-                content.style.display = 'none';
-                
-                // Insert the mobile version
-                sidenote.appendChild(wrapper);
-            });
-        },
-        
-        revertToSidenotes() {
-            document.querySelectorAll('.sidenote-mobile-converted').forEach(sidenote => {
-                const wrapper = sidenote.querySelector('.sidenote-mobile-wrapper');
-                const number = sidenote.querySelector('.sidenote-number');
-                const content = sidenote.querySelector('.sidenote-content');
-                
-                if (wrapper) wrapper.remove();
-                if (number) number.style.display = '';
-                if (content) content.style.display = '';
-                
-                sidenote.classList.remove('sidenote-mobile-converted');
-            });
+            }
         }
     };
 
-    // ============================================
-    // KEYBOARD SHORTCUTS
-    // ============================================
-    
-    const Keyboard = {
+    /* ============================================
+       COLLAPSIBLE SECTIONS MODULE
+       Expandable content blocks
+       ============================================ */
+    const Collapsibles = {
         init() {
-            document.addEventListener('keydown', (e) => {
-                // Alt+D: Toggle dark mode
-                if (e.altKey && (e.key === 'd' || e.key === 'D')) {
-                    e.preventDefault();
-                    const toggle = document.getElementById('theme-toggle-btn');
-                    if (toggle) toggle.click();
-                    return;
-                }
-                
-                // Alt+H: Go home
-                if (e.altKey && (e.key === 'h' || e.key === 'H')) {
-                    e.preventDefault();
-                    const isInPages = window.location.pathname.includes('/pages/');
-                    const isInWriting = window.location.pathname.includes('/writing/');
-                    
-                    let homeUrl = 'index.html';
-                    if (isInWriting) homeUrl = '../../index.html';
-                    else if (isInPages) homeUrl = '../index.html';
-                    
-                    window.location.href = homeUrl;
-                    return;
-                }
-                
-                // / or Ctrl+K: Focus search (if exists)
-                if (e.key === '/' || (e.ctrlKey && e.key === 'k')) {
-                    const search = document.getElementById('search-input');
-                    if (search && document.activeElement !== search) {
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', () => this.toggle(header));
+                header.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        search.focus();
+                        this.toggle(header);
                     }
-                }
+                });
             });
+        },
+
+        toggle(header) {
+            const content = header.nextElementSibling;
+            if (!content || !content.classList.contains('collapsible-content')) return;
+
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            
+            header.setAttribute('aria-expanded', !isExpanded);
+            content.hidden = isExpanded;
+            
+            if (!isExpanded) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            } else {
+                content.style.maxHeight = '0';
+            }
         }
     };
 
-    // ============================================
-    // QUOTE FILTER SYSTEM
-    // ============================================
-    
-    const QuoteFilter = {
+    /* ============================================
+       TABLE OF CONTENTS MODULE
+       Auto-generate from headings
+       ============================================ */
+    const TableOfContents = {
         init() {
-            const container = document.getElementById('filter-buttons');
-            const quotes = document.querySelectorAll('.quote-entry');
+            const tocContainer = document.querySelector('.toc');
+            if (!tocContainer) return;
+
+            const headings = document.querySelectorAll('.entry-content h2, .entry-content h3');
+            if (headings.length < 3) {
+                tocContainer.hidden = true;
+                return;
+            }
+
+            const list = document.createElement('ul');
             
-            if (!container || quotes.length === 0) return;
-            
-            const allTags = new Set();
-            quotes.forEach(quote => {
-                const tags = quote.getAttribute('data-tags');
-                if (tags) {
-                    tags.split(',').forEach(tag => {
-                        const trimmed = tag.trim().toLowerCase();
-                        if (trimmed) allTags.add(trimmed);
-                    });
+            headings.forEach((heading, index) => {
+                // Ensure heading has an ID
+                if (!heading.id) {
+                    heading.id = `section-${index + 1}`;
                 }
+
+                const li = document.createElement('li');
+                li.className = heading.tagName.toLowerCase();
+                
+                const link = document.createElement('a');
+                link.href = `#${heading.id}`;
+                link.textContent = heading.textContent;
+                
+                li.appendChild(link);
+                list.appendChild(li);
             });
-            
-            const sortedTags = Array.from(allTags).sort();
-            
-            container.innerHTML = '';
-            
-            const allBtn = document.createElement('button');
-            allBtn.className = 'filter-btn active';
-            allBtn.setAttribute('data-filter', 'all');
-            allBtn.textContent = 'All';
-            container.appendChild(allBtn);
-            
-            sortedTags.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn';
-                btn.setAttribute('data-filter', tag);
-                btn.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
-                container.appendChild(btn);
-            });
-            
-            const filterButtons = container.querySelectorAll('.filter-btn');
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const filter = button.getAttribute('data-filter');
-                    
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    
-                    quotes.forEach(quote => {
-                        const tags = quote.getAttribute('data-tags').toLowerCase().split(',').map(t => t.trim());
-                        if (filter === 'all' || tags.includes(filter)) {
-                            quote.style.display = 'block';
-                            quote.classList.add('revealed');
-                        } else {
-                            quote.style.display = 'none';
-                        }
-                    });
-                });
-            });
+
+            tocContainer.appendChild(list);
         }
     };
 
-    // ============================================
-    // DEFINITION ALPHABETICAL INDEX
-    // ============================================
-    
-    const DefinitionIndex = {
-        definitions: [],
-        graph: { outgoing: {}, incoming: {} },
-        
-        init() {
-            const container = document.getElementById('alpha-index');
-            const definitionsList = document.getElementById('definitions-list');
-            const entries = document.querySelectorAll('.definition-entry');
-            
-            if (!container || entries.length === 0) return;
-            
-            // Build definition data
-            this.buildDefinitionData(entries);
-            
-            // Build cross-reference graph
-            this.buildGraph(entries);
-            
-            // Inject toolbar
-            this.injectToolbar(definitionsList);
-            
-            // Render alpha index
-            this.renderAlphaIndex(container);
-            
-            // Add cross-reference UI to each entry
-            this.renderCrossReferences(entries);
-            
-            // Setup event listeners
-            this.setupSearch();
-            this.setupSort();
-        },
-        
-        buildDefinitionData(entries) {
-            entries.forEach(entry => {
-                const id = entry.id;
-                const termEl = entry.querySelector('.definition-term');
-                const letterEl = entry.querySelector('.definition-letter');
-                const dateEl = entry.querySelector('.definition-date');
-                
-                this.definitions.push({
-                    id,
-                    element: entry,
-                    term: termEl ? termEl.textContent.trim() : id,
-                    letter: letterEl ? letterEl.textContent.trim().toUpperCase() : '',
-                    date: dateEl ? dateEl.textContent.replace('Added:', '').trim() : '',
-                    connections: 0 // Will be calculated after graph is built
-                });
-            });
-        },
-        
-        buildGraph(entries) {
-            // Initialize graph nodes
-            this.definitions.forEach(def => {
-                this.graph.outgoing[def.id] = [];
-                this.graph.incoming[def.id] = [];
-            });
-            
-            // Find all internal links in each definition
-            entries.forEach(entry => {
-                const sourceId = entry.id;
-                const content = entry.querySelector('.definition-content');
-                if (!content) return;
-                
-                // Find all links to other definitions
-                const links = content.querySelectorAll('a[href^="#"]');
-                links.forEach(link => {
-                    const targetId = link.getAttribute('href').substring(1);
-                    
-                    // Only count if target exists in our definitions
-                    if (this.graph.outgoing[targetId] !== undefined) {
-                        // Avoid duplicates
-                        if (!this.graph.outgoing[sourceId].includes(targetId)) {
-                            this.graph.outgoing[sourceId].push(targetId);
-                        }
-                        if (!this.graph.incoming[targetId].includes(sourceId)) {
-                            this.graph.incoming[targetId].push(sourceId);
-                        }
-                    }
-                });
-            });
-            
-            // Calculate total connections for each definition
-            this.definitions.forEach(def => {
-                def.connections = 
-                    (this.graph.outgoing[def.id]?.length || 0) + 
-                    (this.graph.incoming[def.id]?.length || 0);
-            });
-        },
-        
-        injectToolbar(container) {
-            const toolbar = document.createElement('div');
-            toolbar.className = 'definitions-toolbar';
-            toolbar.innerHTML = `
-                <div class="definitions-search">
-                    <input type="text" id="def-search" placeholder="Search definitions..." aria-label="Search definitions">
-                </div>
-                <div class="definitions-sort">
-                    <label for="def-sort">Sort:</label>
-                    <select id="def-sort">
-                        <option value="alpha-asc">A → Z</option>
-                        <option value="alpha-desc">Z → A</option>
-                        <option value="connections">Most Connected</option>
-                        <option value="recent">Recently Added</option>
-                    </select>
-                </div>
-                <div class="definitions-stats">
-                    <span id="def-count">${this.definitions.length}</span> definitions
-                </div>
-            `;
-            
-            container.parentNode.insertBefore(toolbar, container);
-        },
-        
-        renderAlphaIndex(container) {
-            const letters = new Set();
-            this.definitions.forEach(def => {
-                if (def.letter) letters.add(def.letter);
-            });
-            
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-            container.innerHTML = '';
-            
-            alphabet.forEach(letter => {
-                const link = document.createElement('a');
-                link.href = '#letter-' + letter;
-                link.textContent = letter;
-                
-                if (!letters.has(letter)) {
-                    link.classList.add('disabled');
-                    link.removeAttribute('href');
-                }
-                
-                container.appendChild(link);
-            });
-            
-            // Add letter anchors to entries
-            let currentLetter = '';
-            this.definitions
-                .sort((a, b) => a.term.localeCompare(b.term))
-                .forEach(def => {
-                    if (def.letter && def.letter !== currentLetter) {
-                        currentLetter = def.letter;
-                        const anchor = document.createElement('a');
-                        anchor.id = 'letter-' + currentLetter;
-                        def.element.parentNode.insertBefore(anchor, def.element);
-                    }
-                });
-        },
-        
-        renderCrossReferences(entries) {
-            entries.forEach(entry => {
-                const id = entry.id;
-                const content = entry.querySelector('.definition-content');
-                if (!content) return;
-                
-                const outgoing = this.graph.outgoing[id] || [];
-                const incoming = this.graph.incoming[id] || [];
-                
-                // Add connection badge to header
-                const header = entry.querySelector('h3');
-                if (header && (outgoing.length > 0 || incoming.length > 0)) {
-                    const badge = document.createElement('span');
-                    badge.className = 'definition-connections';
-                    badge.innerHTML = `
-                        <span class="refs-out" title="References">${outgoing.length}→</span>
-                        <span class="separator">|</span>
-                        <span class="refs-in" title="Referenced by">←${incoming.length}</span>
-                    `;
-                    header.appendChild(badge);
-                }
-                
-                // Add cross-reference section
-                const crossrefs = document.createElement('div');
-                crossrefs.className = 'definition-crossrefs';
-                
-                // Outgoing references (what this links to)
-                if (outgoing.length > 0) {
-                    crossrefs.appendChild(this.createCrossrefSection(
-                        'References',
-                        '→',
-                        'refs-out',
-                        outgoing
-                    ));
-                }
-                
-                // Incoming references (what links to this)
-                if (incoming.length > 0) {
-                    crossrefs.appendChild(this.createCrossrefSection(
-                        'Referenced by',
-                        '←',
-                        'refs-in',
-                        incoming
-                    ));
-                }
-                
-                if (outgoing.length > 0 || incoming.length > 0) {
-                    content.appendChild(crossrefs);
-                }
-            });
-        },
-        
-        createCrossrefSection(label, arrow, className, ids) {
-            const section = document.createElement('div');
-            section.className = 'crossref-section';
-            
-            const labelEl = document.createElement('div');
-            labelEl.className = 'crossref-label ' + className;
-            labelEl.innerHTML = `<span class="arrow">${arrow}</span> ${label}`;
-            section.appendChild(labelEl);
-            
-            const links = document.createElement('div');
-            links.className = 'crossref-links';
-            
-            ids.forEach(id => {
-                const def = this.definitions.find(d => d.id === id);
-                const link = document.createElement('a');
-                link.href = '#' + id;
-                link.className = 'crossref-link';
-                link.textContent = def ? def.term : id;
-                links.appendChild(link);
-            });
-            
-            section.appendChild(links);
-            return section;
-        },
-        
-        setupSearch() {
-            const input = document.getElementById('def-search');
-            if (!input) return;
-            
-            input.addEventListener('input', Utils.debounce(() => {
-                const query = input.value.toLowerCase().trim();
-                let visibleCount = 0;
-                
-                this.definitions.forEach(def => {
-                    const matches = query === '' || 
-                        def.term.toLowerCase().includes(query) ||
-                        def.element.textContent.toLowerCase().includes(query);
-                    
-                    def.element.classList.toggle('filtered-out', !matches);
-                    if (matches) visibleCount++;
-                });
-                
-                // Update count
-                const countEl = document.getElementById('def-count');
-                if (countEl) {
-                    countEl.textContent = visibleCount;
-                }
-            }, 150));
-        },
-        
-        setupSort() {
-            const select = document.getElementById('def-sort');
-            if (!select) return;
-            
-            select.addEventListener('change', () => {
-                const value = select.value;
-                const container = document.getElementById('definitions-list');
-                if (!container) return;
-                
-                // Get current entries
-                const entries = Array.from(container.querySelectorAll('.definition-entry'));
-                
-                // Sort based on selection
-                entries.sort((a, b) => {
-                    const defA = this.definitions.find(d => d.id === a.id);
-                    const defB = this.definitions.find(d => d.id === b.id);
-                    if (!defA || !defB) return 0;
-                    
-                    switch(value) {
-                        case 'alpha-asc':
-                            return defA.term.localeCompare(defB.term);
-                        case 'alpha-desc':
-                            return defB.term.localeCompare(defA.term);
-                        case 'connections':
-                            return defB.connections - defA.connections;
-                        case 'recent':
-                            // Parse dates and sort newest first
-                            return defB.date.localeCompare(defA.date);
-                        default:
-                            return 0;
-                    }
-                });
-                
-                // Remove letter anchors (we'll re-add them if sorting alpha)
-                container.querySelectorAll('a[id^="letter-"]').forEach(a => a.remove());
-                
-                // Reorder in DOM
-                entries.forEach(entry => container.appendChild(entry));
-                
-                // Re-add letter anchors if sorting alphabetically
-                if (value === 'alpha-asc' || value === 'alpha-desc') {
-                    let currentLetter = '';
-                    entries.forEach(entry => {
-                        const def = this.definitions.find(d => d.id === entry.id);
-                        if (def && def.letter && def.letter !== currentLetter) {
-                            currentLetter = def.letter;
-                            const anchor = document.createElement('a');
-                            anchor.id = 'letter-' + currentLetter;
-                            entry.parentNode.insertBefore(anchor, entry);
-                        }
-                    });
-                }
-            });
-        }
-    };
-
-    // ============================================
-    // SMOOTH SCROLLING
-    // ============================================
-    
+    /* ============================================
+       SMOOTH SCROLL MODULE
+       Animated anchor navigation
+       ============================================ */
     const SmoothScroll = {
         init() {
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href !== '#' && href.length > 1) {
-                        const target = document.querySelector(href);
-                        if (target) {
+                anchor.addEventListener('click', (e) => {
+                    const targetId = anchor.getAttribute('href');
+                    if (targetId === '#') return;
+
+                    const target = document.querySelector(targetId);
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // Update URL without jumping
+                        history.pushState(null, '', targetId);
+                    }
+                });
+            });
+        }
+    };
+
+    /* ============================================
+       EXTERNAL LINK HANDLER
+       Mark and handle external links
+       ============================================ */
+    const ExternalLinks = {
+        init() {
+            const currentHost = window.location.hostname;
+            
+            document.querySelectorAll('a[href^="http"]').forEach(link => {
+                try {
+                    const url = new URL(link.href);
+                    if (url.hostname !== currentHost) {
+                        link.classList.add('external');
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                        
+                        // Add visual indicator if not already present
+                        if (!link.querySelector('.external-icon')) {
+                            const icon = document.createElement('span');
+                            icon.className = 'external-icon';
+                            icon.setAttribute('aria-hidden', 'true');
+                            icon.textContent = '↗';
+                            link.appendChild(icon);
+                        }
+                    }
+                } catch (e) {
+                    // Invalid URL, skip
+                }
+            });
+        }
+    };
+
+    /* ============================================
+       KEYBOARD NAVIGATION
+       Vim-style shortcuts
+       ============================================ */
+    const KeyboardNav = {
+        init() {
+            document.addEventListener('keydown', (e) => {
+                // Skip if typing in input/textarea
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+                switch(e.key.toLowerCase()) {
+                    case 'g':
+                        // Go to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        break;
+                    case 'shift':
+                        // G = Go to bottom (need to check for Shift+G)
+                        break;
+                    case 'j':
+                        // Scroll down
+                        window.scrollBy({ top: 100, behavior: 'smooth' });
+                        break;
+                    case 'k':
+                        // Scroll up
+                        window.scrollBy({ top: -100, behavior: 'smooth' });
+                        break;
+                    case '/':
+                        // Focus search if exists
+                        const search = document.querySelector('input[type="search"], .search-input');
+                        if (search) {
                             e.preventDefault();
-                            target.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'start' 
-                            });
-                            history.pushState(null, null, href);
+                            search.focus();
                         }
+                        break;
+                }
+            });
+
+            // Handle Shift+G for go to bottom
+            let shiftPressed = false;
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Shift') shiftPressed = true;
+                if (e.key.toLowerCase() === 'g' && shiftPressed) {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
+            });
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'Shift') shiftPressed = false;
+            });
+        }
+    };
+
+    /* ============================================
+       COPY CODE BLOCKS
+       Add copy button to code blocks
+       ============================================ */
+    const CopyCode = {
+        init() {
+            document.querySelectorAll('pre code').forEach(block => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                
+                const button = document.createElement('button');
+                button.className = 'copy-code-btn';
+                button.textContent = 'Copy';
+                button.setAttribute('aria-label', 'Copy code to clipboard');
+                
+                button.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(block.textContent);
+                        button.textContent = 'Copied!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (e) {
+                        button.textContent = 'Failed';
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                        }, 2000);
                     }
                 });
+
+                block.parentNode.insertBefore(wrapper, block);
+                wrapper.appendChild(block);
+                wrapper.appendChild(button);
             });
         }
     };
 
-    // ============================================
-    // LAZY LOAD IMAGES
-    // ============================================
-    
-    const LazyLoad = {
-        init() {
-            if (!('IntersectionObserver' in window)) return;
-            
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        if (img.dataset.src) {
-                            img.src = img.dataset.src;
-                            img.classList.remove('lazy');
-                        }
-                        observer.unobserve(img);
-                    }
-                });
-            });
-            
-            document.querySelectorAll('img.lazy').forEach(img => {
-                imageObserver.observe(img);
-            });
-        }
-    };
-
-    // ============================================
-    // LION ICON SVG
-    // ============================================
-    
-    const LionIcon = {
-        svg: `<svg class="lion-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.5 2 5.5 4 4 7c-1 2-1 4 0 6 .5 1 1.2 1.8 2 2.5-.3.8-.5 1.6-.5 2.5 0 2.2 1.8 4 4 4 .8 0 1.6-.3 2.2-.7.2.1.5.2.8.2h1c.3 0 .6-.1.8-.2.6.4 1.4.7 2.2.7 2.2 0 4-1.8 4-4 0-.9-.2-1.7-.5-2.5.8-.7 1.5-1.5 2-2.5 1-2 1-4 0-6-1.5-3-4.5-5-8-5zm-3 8c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm6 0c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm-3 5c-1.1 0-2-.4-2-1h4c0 .6-.9 1-2 1z"/>
-        </svg>`,
-        
-        init() {
-            const navTitle = document.querySelector('.nav-header h1 a');
-            if (navTitle && !navTitle.querySelector('.lion-icon')) {
-                navTitle.insertAdjacentHTML('beforeend', this.svg);
-            }
-        }
-    };
-
-    // ============================================
-    // CONSOLE EASTER EGG
-    // ============================================
-    
-    const ConsoleEasterEgg = {
-        init() {
-            const styles = {
-                title: 'font-size: 24px; font-weight: bold; font-style: italic; color: #B8860B;',
-                quote: 'font-size: 14px; color: #666; font-style: italic;',
-                info: 'font-size: 11px; color: #888;'
-            };
-            
-            console.log('%cH. Aslan', styles.title);
-            console.log('%c"Not a tame lion."', styles.quote);
-            console.log('%c— C.S. Lewis, The Chronicles of Narnia', styles.info);
-            console.log('%c\nKeyboard shortcuts:', styles.info);
-            console.log('%c  Alt+D → Toggle dark mode', styles.info);
-            console.log('%c  Alt+H → Return home', styles.info);
-            console.log('%c\n"He is not safe, but he is good."', styles.quote);
-        }
-    };
-
-    // ============================================
-    // UTILITIES
-    // ============================================
-    
-    const Utils = {
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        },
-        
-        formatDate(date) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(date).toLocaleDateString('en-US', options);
-        },
-        
-        getReadingTime(text) {
-            const wordsPerMinute = 200;
-            const words = text.trim().split(/\s+/).length;
-            const minutes = Math.ceil(words / wordsPerMinute);
-            return `${minutes} min read`;
-        }
-    };
-
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-    
+    /* ============================================
+       INITIALIZE ALL MODULES
+       ============================================ */
     function init() {
-        // Initialize loading screen first (handles its own visibility)
-        LoadingScreen.init();
-        
         // Core functionality
-        DarkMode.init();
+        MobileNav.init();
+        LoadingScreen.init();
         ReadingProgress.init();
-        ScrollReveal.init();
+        DarkMode.init();
+        
+        // Content enhancement
         AutoEnhance.init();
-        LinkPopup.init();
+        ScrollReveal.init();
         DesktopSidenotes.init();
-        MobileSidenotes.init();
-        Keyboard.init();
+        Collapsibles.init();
+        TableOfContents.init();
+        
+        // Navigation & UX
         SmoothScroll.init();
-        LazyLoad.init();
-        LionIcon.init();
-        
-        // Page-specific
-        QuoteFilter.init();
-        DefinitionIndex.init();
-        
-        // Easter egg
-        ConsoleEasterEgg.init();
+        ExternalLinks.init();
+        LinkPopup.init();
+        KeyboardNav.init();
+        CopyCode.init();
     }
-    
-    // Start when DOM is ready
+
+    // Run on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-
-    // Export for potential external use
-    window.WikiEnhance = {
-        Utils,
-        DarkMode,
-        LinkPopup,
-        AutoEnhance,
-        LoadingScreen,
-        DesktopSidenotes,
-        MobileSidenotes
-    };
 
 })();
