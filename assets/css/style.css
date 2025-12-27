@@ -2112,6 +2112,16 @@ a.definition-link:visited {
     color: #C86478;
 }
 
+.badge-dialogue {
+    background: rgba(75, 130, 120, 0.15);
+    color: #4B8278;
+}
+
+[data-theme="dark"] .badge-dialogue {
+    background: rgba(95, 160, 145, 0.2);
+    color: #5FA091;
+}
+
 .badge-draft {
     background: var(--code-bg);
     color: var(--text-tertiary);
