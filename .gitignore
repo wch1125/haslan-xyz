@@ -1,0 +1,17 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Node / tooling (if you ever add a build step)
+node_modules/
+dist/
+build/
+.tmp/
+.cache/
