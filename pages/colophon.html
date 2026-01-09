@@ -70,100 +70,102 @@
             </header>
             
             <div class="abstract">
-                <p><span class="abstract-label">Abstract:</span> How this site is built, what inspired it, and why I made certain choices. Part craft explanation, part invitation to steal liberally.</p>
+                <p><span class="abstract-label">Abstract:</span> How this site is built and what inspired it.</p>
             </div>
 
             <section id="philosophy">
-                <p><span class="dropcap">T</span>his is a static site with no build step, no CMS, and no framework. Just HTML, CSS, and vanilla JavaScript. Everything is version-controlled in Git and hosted on a simple server.</p>
+                <p><span class="dropcap">T</span>his is a static site with no build step, no CMS, and no framework. Just HTML, CSS, and vanilla JavaScript. Everything is version-controlled in Git and hosted on GitHub Pages.</p>
                 
-                <p>I wanted something I could understand completely, fix when it breaks, and keep running for decades if needed. The web has a long memory; platforms don't.</p>
+                <p>I wanted something I could understand completely and fix when it breaks. The web has a long memory; platforms don't.</p>
             </section>
 
             <section id="design">
                 <h2>Design Inspirations</h2>
                 
-                <p>The visual and interaction design draws from several sources:</p>
-                
                 <ul>
                     <li><strong><a href="https://gwern.net">Gwern.net</a></strong> — The gold standard for personal wikis. Inspired the overall structure, the use of sidenotes, and the "evergreen" content philosophy.</li>
                     <li><strong><a href="https://edwardtufte.github.io/tufte-css/">Tufte CSS</a></strong> — The marginal notes pattern and the idea that typography can do heavy lifting.</li>
-                    <li><strong>C.S. Lewis's Narnia</strong> — The name "H. Aslan" and the subtle lion motif throughout (gold accents, the loading animation, console easter eggs). Those who know will recognize it; everyone else just sees a clean design.</li>
+                    <li><strong>C.S. Lewis's Narnia</strong> — The name and the subtle lion motif (gold accents, the loading animation, console easter eggs).</li>
                 </ul>
             </section>
 
-            <section id="features">
-                <h2>Key Features</h2>
+            <section id="the-name">
+                <h2>On the Name</h2>
                 
-                <h3>Defined Terms System</h3>
-                <p>Capitalized terms like <a href="definitions.html#personal-domain" class="definition-link" data-term="Personal Domain" data-definition="A self-controlled space on the web used as a stable anchor against platform risk and narrative drift.">Personal Domain</a> automatically link to the glossary and show hover previews. This creates a web of interconnected concepts—more like a concept map than a traditional site.</p>
+                <p>H. Aslan is a refraction of my actual surname—"Haslun" with one letter changed. I wanted something that could mark the work without attaching my full identity to every essay, and the proximity to the Narnia lion was sitting right there, unavoidable once noticed.</p>
+                
+                <p>The tagline matters more than the name. "Not a tame lion" is a line spoken <em>about</em> Aslan in the books—a warning from those who know him to those who don't. He's good, they say, but not safe; he won't be predicted or domesticated into comfortable categories. That seemed like a reasonable aspiration for a writing project.<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Whether the writing achieves this is a separate question.</span></span></p>
+                
+                <p>The risk is grandiosity. What I hope prevents that is the texture of the essays themselves, which are tentative more often than declarative. The name borrows from a figure that knows things; the writing mostly doesn't.</p>
+            </section>
+
+            <section id="features">
+                <h2>Features</h2>
+                
+                <h3>Defined Terms</h3>
+                <p>Capitalized terms like <a href="definitions.html#personal-domain" class="definition-link" data-term="Personal Domain" data-definition="A self-controlled space on the web used as a stable anchor against platform risk and narrative drift.">Personal Domain</a> link to the glossary and show hover previews.</p>
                 
                 <h3>Sidenotes</h3>
-                <p>Marginal notes appear on desktop.<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Like this one. They let you add context without interrupting the main flow.</span></span> On mobile, they collapse inline. Inspired by Tufte's principle that footnotes interrupt reading, but side-by-side content doesn't.</p>
+                <p>Marginal notes on desktop; inline on mobile.<span class="sidenote"><span class="sidenote-number"></span><span class="sidenote-content">Like this one.</span></span> Footnotes interrupt reading; sidenotes don't.</p>
                 
                 <h3>Progressive Disclosure</h3>
-                <p>Collapsible sections let readers control depth. Show the overview first; details on demand.</p>
+                <p>Collapsible sections let readers control depth.</p>
                 
                 <details class="collapse">
                     <summary>Like this</summary>
                     <div class="collapse-content">
-                        <p>If you're curious, you click. If not, you keep reading. Either choice is valid.</p>
+                        <p>If you're curious, you click. If not, you keep reading.</p>
                     </div>
                 </details>
                 
                 <h3>Dark Mode</h3>
-                <p>Respects system preference, remembers your choice, transitions smoothly. Press <kbd>Alt</kbd>+<kbd>D</kbd> to toggle.</p>
+                <p>Respects system preference, remembers your choice. <kbd>Alt</kbd>+<kbd>D</kbd> to toggle.</p>
             </section>
 
             <section id="tools">
-                <h2>Tools & Stack</h2>
+                <h2>Stack</h2>
                 
                 <ul>
-                    <li><strong>HTML/CSS/JS</strong> — No frameworks. I want to understand every line.</li>
-                    <li><strong>Git</strong> — Version control for everything. Every change is tracked.</li>
-                    <li><strong>Python (Flask)</strong> — A small wiki-manager script for adding content locally.</li>
-                    <li><strong>Any text editor</strong> — I mostly use VS Code, but the site doesn't care.</li>
+                    <li><strong>HTML/CSS/JS</strong> — No frameworks.</li>
+                    <li><strong>Git</strong> — Version control for everything.</li>
+                    <li><strong>GitHub Pages</strong> — Hosting.</li>
                 </ul>
                 
-                <p>Total dependencies: effectively zero. The site will work as long as browsers render HTML.</p>
+                <p>Total dependencies: zero. The site will work as long as browsers render HTML.</p>
             </section>
 
             <section id="typography">
                 <h2>Typography</h2>
                 
                 <ul>
-                    <li><strong>Body text:</strong> System serif stack (Iowan Old Style → Palatino → Georgia)</li>
-                    <li><strong>UI elements:</strong> System sans-serif stack</li>
+                    <li><strong>Body:</strong> System serif (Iowan Old Style → Palatino → Georgia)</li>
+                    <li><strong>UI:</strong> System sans-serif</li>
                     <li><strong>Code:</strong> SF Mono → Consolas → Monaco</li>
                 </ul>
                 
-                <p>No web fonts to load. Fast, reliable, and the reader's system handles rendering.</p>
+                <p>No web fonts. Fast and reliable.</p>
             </section>
 
             <section id="colors">
-                <h2>Color Palette</h2>
+                <h2>Color</h2>
                 
-                <p>Mostly monochrome with one accent color: <span style="color: var(--accent-gold); font-weight: 600;">lion's mane gold (#B8860B)</span>. The gold appears in dropcaps, hover states, the loading animation, and the progress bar. It's the only "brand" color.</p>
-                
-                <p>The restraint is intentional. Every bit of gold should feel earned.</p>
+                <p>Monochrome with one accent: <span style="color: var(--accent-gold); font-weight: 600;">lion's mane gold (#B8860B)</span>. It appears in dropcaps, hover states, the loading animation, and the progress bar.</p>
             </section>
 
             <section id="steal">
                 <h2>Steal This</h2>
                 
-                <p>If you want to make something similar, go ahead. The patterns here aren't original—I borrowed heavily from the sources above. Personal websites are collaborative even when we don't talk to each other; we learn from what we see and iterate.</p>
-                
-                <p>If you want help setting up your own, <a href="contact.html">reach out</a>. I'm happy to point you at resources or answer questions.</p>
+                <p>If you want to make something similar, go ahead. The patterns aren't original. Personal websites are collaborative even when we don't talk to each other.</p>
                 
                 <details class="collapse">
                     <summary>Starting from scratch?</summary>
                     <div class="collapse-content">
-                        <p>A few places to begin:</p>
                         <ul>
-                            <li><a href="https://neocities.org">Neocities</a> — Free hosting, no coding required to start</li>
-                            <li><a href="https://pages.github.com">GitHub Pages</a> — Free hosting if you're comfortable with Git</li>
-                            <li><a href="https://bearblog.dev">Bear Blog</a> — Simple blogging, no distractions</li>
+                            <li><a href="https://neocities.org">Neocities</a> — Free hosting, no coding required</li>
+                            <li><a href="https://pages.github.com">GitHub Pages</a> — Free hosting with Git</li>
+                            <li><a href="https://bearblog.dev">Bear Blog</a> — Simple blogging</li>
                         </ul>
-                        <p>Start small. A single HTML page with your name and a paragraph is a personal website. Everything else is iteration.</p>
+                        <p>A single HTML page with your name and a paragraph is a personal website. Everything else is iteration.</p>
                     </div>
                 </details>
             </section>
